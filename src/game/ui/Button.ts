@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { DEPTH } from '@/config/constants';
+import { DEPTH, REGISTRY } from '@/config/constants';
+import type { AudioSystem } from '@/game/audio/AudioSystem';
 import { THEME, textStyle } from './theme';
 
 export interface ButtonOptions {
@@ -35,6 +36,7 @@ export class Button extends Phaser.GameObjects.Container {
     this.on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => this.draw(0.85));
     this.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => {
       this.draw(1.08);
+      (scene.registry.get(REGISTRY.AUDIO) as AudioSystem | undefined)?.play('click');
       onClick();
     });
     scene.add.existing(this);

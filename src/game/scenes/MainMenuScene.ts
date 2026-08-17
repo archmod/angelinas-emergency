@@ -4,6 +4,7 @@ import { firstIncompleteLevelId } from '@/core/rules/progress';
 import type { DebugFlags } from '@/game/debug/flags';
 import type { SaveManager } from '@/game/systems/SaveManager';
 import { Button } from '@/game/ui/Button';
+import { addSoundToggle } from '@/game/ui/SoundToggle';
 import { THEME, textStyle } from '@/game/ui/theme';
 import { CAMPAIGN } from '@/levels/registry';
 
@@ -31,6 +32,7 @@ export class MainMenuScene extends Phaser.Scene {
 
     this.add.text(cx, GAME_HEIGHT - 44, this.sys.game.device.input.touch ? 'Joystick: left side · GO / RUN: right side' : 'WASD / arrows move · Shift run · C sneak · Space/E = GO · Esc pause', textStyle(16, THEME.colors.textDim)).setOrigin(0.5);
     this.add.text(GAME_WIDTH - 16, GAME_HEIGHT - 12, `v${APP_VERSION}`, textStyle(16, THEME.colors.textDim)).setOrigin(1, 1);
+    addSoundToggle(this, 96, GAME_HEIGHT - 40);
 
     this.input.keyboard?.once('keydown-SPACE', play);
     this.input.keyboard?.once('keydown-ENTER', play);

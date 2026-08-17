@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import './styles.css';
 import { gameConfig } from '@/config/game';
 import { setupRotateOverlay } from '@/game/ui/RotateOverlay';
+import { maybeShowInstallHint } from '@/platform/installHint';
 import { installBrowserGuards, installWakeLock } from '@/platform/ios';
 import { registerServiceWorker } from '@/platform/pwa';
 
@@ -17,6 +18,7 @@ if (import.meta.env.DEV || new URLSearchParams(window.location.search).has('debu
 }
 
 if (import.meta.env.PROD) registerServiceWorker();
+maybeShowInstallHint();
 
 // On-device console for iOS (no Safari Web Inspector on Linux): open with ?debug=1
 if (new URLSearchParams(window.location.search).has('debug')) {

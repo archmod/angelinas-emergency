@@ -1,19 +1,41 @@
 # Angelina's Emergency
 
 A 2D top-down stealth game for the browser — desktop and iPhone (Safari). Angelina urgently needs to poop; sneak to a spot,
-do the deed, and don't get caught by the park ranger, the nosy neighbors, or the hall monitor.
+hold GO to do the deed, and don't get caught by the park ranger, the nosy neighbors, or the hall monitor.
+
+**Play:** https://archmod.github.io/angelinas-emergency/ (on iPhone: Share → *Add to Home Screen* for fullscreen)
+
+## Controls
+
+| | Desktop | Touch |
+|---|---|---|
+| Move | WASD / arrows | left-thumb floating joystick (push gently to creep) |
+| Run (fast, noisy) | Shift | RUN button |
+| Sneak (slow, silent) | C | — |
+| Poop / interact | hold Space or E | hold GO |
+| Pause | Esc / P | ⏸ button |
+
+Enemies see in the yellow cones (walls and bushes block sight) and hear running footsteps and… the deed itself.
+Bushes, lockers and hidden spots hide you unless someone walks right into you. Watch the urgency meter.
 
 ## Develop
 
 ```bash
 npm install
 npm run dev          # http://localhost:5173 (also served on your LAN IP for phone testing)
-npm test             # unit tests (Vitest)
-npm run test:e2e     # browser smoke tests (Playwright)
+npm test             # unit tests (Vitest) — core logic + level validity
+npm run test:e2e     # browser smoke tests (Playwright, Chromium; PW_WEBKIT=1 adds WebKit)
 npm run build && npm run preview
 ```
 
-Open `?debug=1` for an on-device console (eruda) and debug overlays.
+Debug: append `?debug=1` (on-device eruda console + `` ` ``/F1 overlay, F2 hearing, F3 nav, F4 bodies, F6 god mode),
+`?level=<id>` to jump to a level (ids: `park-01`, `park-02`, `neighborhood-01`, `neighborhood-02`, `school-01`, `school-02`, `test-01`).
+
+## Levels
+
+Levels are ASCII text in `src/levels/ascii/*.ts` (see the legend in `src/core/level/asciiLevel.ts`) and are validated by
+`npm test` (rectangular, every spot reachable, every patrol connected). Tiled `.tmj` maps are also supported
+(`src/core/level/parseTiled.ts`; `npm run gen:tiles` writes a placeholder tileset for Tiled).
 
 ## Deploy
 
@@ -21,4 +43,4 @@ Pushes to `main` build and deploy to GitHub Pages via `.github/workflows/deploy.
 
 ## Stack
 
-Phaser 4 · TypeScript · Vite · Vitest · Playwright · vite-plugin-pwa
+Phaser 4 · TypeScript · Vite · Vitest · Playwright · vite-plugin-pwa · procedural WebAudio SFX

@@ -77,3 +77,32 @@ body {
     transform: rotate(0deg);
   }
 }
+
+/* One-time iOS "Add to Home Screen" hint (DOM, above the canvas). */
+#install-hint {
+  position: fixed;
+  left: 50%;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  max-width: 92vw;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(20, 20, 30, 0.92);
+  color: #f4f1ea;
+  font-size: 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+  touch-action: manipulation;
+}
+#install-hint button {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #ff7ab6;
+  color: #1b1b24;
+  font-weight: 700;
+  font-size: 14px;
+}

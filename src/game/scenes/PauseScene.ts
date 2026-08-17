@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, SCENES } from '@/config/constants';
 import { Button } from '@/game/ui/Button';
+import { addSoundToggle } from '@/game/ui/SoundToggle';
 import { THEME, textStyle } from '@/game/ui/theme';
 
 /** Overlay launched above the paused Game + Hud scenes. */
@@ -30,6 +31,7 @@ export class PauseScene extends Phaser.Scene {
     new Button(this, GAME_WIDTH / 2, GAME_HEIGHT * 0.5, 'Resume', resume);
     new Button(this, GAME_WIDTH / 2, GAME_HEIGHT * 0.5 + 84, 'Restart level', restart, { color: 0xffd166 });
     new Button(this, GAME_WIDTH / 2, GAME_HEIGHT * 0.5 + 168, 'Main menu', menu, { color: 0x9aa4b2 });
+    addSoundToggle(this, GAME_WIDTH - 110, GAME_HEIGHT - 44);
     this.input.keyboard?.on('keydown-ESC', resume);
     this.input.keyboard?.on('keydown-P', resume);
     this.input.keyboard?.on('keydown-R', restart);

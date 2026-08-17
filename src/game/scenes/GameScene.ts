@@ -3,6 +3,7 @@ import { BALANCE } from '@/config/balance';
 import { DEPTH, REGISTRY, SCENES } from '@/config/constants';
 import type { Rect } from '@/core/level/schema';
 import { TEX } from '@/game/art/AssetKeys';
+import type { AudioSystem } from '@/game/audio/AudioSystem';
 import { DebugOverlay } from '@/game/debug/DebugOverlay';
 import type { DebugFlags } from '@/game/debug/flags';
 import { Enemy, type PlayerSnapshot } from '@/game/entities/Enemy';
@@ -43,6 +44,8 @@ export class GameScene extends Phaser.Scene {
   private debug!: DebugOverlay;
   private flags!: DebugFlags;
   private exitSprite: Phaser.GameObjects.TileSprite | null = null;
+  private audio!: AudioSystem;
+  private exitWasOpen = false;
   private ended = false;
 
   constructor() {
@@ -51,7 +54,9 @@ export class GameScene extends Phaser.Scene {
 
   create(data: GameSceneData): void {
     this.ended = false;
+    this.exitWasOpen = false;
     this.flags = this.registry.get(REGISTRY.DEBUG_FLAGS) as DebugFlags;
+    this.audio = this.registry.get(REGISTRY.AUDIO) as AudioSystem;
     const levelId = data.levelId ?? this.flags.level ?? DEFAULT_LEVEL_ID;
     this.entry = getLevel(levelId);
     const levelData = this.entry.load({ json: (key) => this.cache.json.get(key) as unknown });
@@ -90,8 +95,19 @@ export class GameScene extends Phaser.Scene {
     this.bus.on('player:caught', () => this.lose('caught'));
     this.bus.on('ui:pause', () => this.pause());
     this.bus.on('enemy:mode', ({ from, to }) => {
-      if (to === 'suspicious' && (from === 'patrol' || from === 'return')) this.run.timesSuspicious += 1;
-      if (to === 'chase') this.run.timesAlerted += 1;
+      if (to === 'suspicious' && (from === 'patrol' || from === 'return')) {
+        this.run.timesSuspicious += 1;
+        this.audio.play('suspicious', 0.3);
+      }
+      if (to === 'chase') {
+        this.run.timesAlerted += 1;
+        this.audio.play('alert', 0.5);
+        this.cameras.main.shake(120, 0.004);
+      }
+    });
+    this.bus.on('noise', (n) => {
+      if (n.kind === 'footstep' && n.loudness > 0.5) this.audio.play('step', 0.25);
+      else if (n.kind === 'poop') this.audio.play('poopNoise', 0.3);
     });
     this.input.keyboard?.on('keydown-R', () => this.scene.restart());
 
@@ -115,13 +131,23 @@ export class GameScene extends Phaser.Scene {
     this.run.onPoopCompleted();
     this.bus.emit('poop:completed', { total: this.run.poopsCompleted });
     this.cameras.main.flash(200, 126, 231, 135, false);
+    this.audio.play('poopDone');
+    this.floatText(this.player.x, this.player.y - 36, 'Ahh… relief!', '#7ee787');
     this.physics.add.overlap(this.enemies, poop, (obj) => {
       const enemy = obj as Enemy;
       if (!enemy.stunned) {
         enemy.slip(BALANCE.enemy.slipSeconds);
+        this.audio.play('slip');
+        this.floatText(enemy.x, enemy.y - 30, 'Eww!', '#c99a5b');
         this.noise.emit({ pos: enemy.pos, radius: 60, loudness: 0.4, kind: 'bump', sourceId: enemy.id });
       }
     });
+  }
+
+  /** Small rising, fading text in world space. */
+  private floatText(x: number, y: number, text: string, color: string): void {
+    const t = this.add.text(x, y, text, { fontFamily: 'system-ui, sans-serif', fontSize: '18px', color, fontStyle: 'bold', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(DEPTH.FX);
+    this.tweens.add({ targets: t, y: y - 40, alpha: 0, duration: 1100, ease: 'Cubic.easeOut', onComplete: () => t.destroy() });
   }
 
   private pause(): void {
@@ -137,10 +163,13 @@ export class GameScene extends Phaser.Scene {
     this.player.frozen = true;
     this.bus.emit('level:lost', { reason });
     if (reason === 'caught') {
+      this.audio.play('caught');
       this.cameras.main.shake(250, 0.01);
       this.cameras.main.flash(300, 255, 60, 60);
     } else {
+      this.audio.play('accident');
       this.cameras.main.flash(500, 122, 74, 29);
+      this.floatText(this.player.x, this.player.y - 36, 'Oh no…', '#c99a5b');
     }
     this.finish({ outcome: 'lose', reason });
   }
@@ -150,6 +179,7 @@ export class GameScene extends Phaser.Scene {
     this.ended = true;
     this.player.frozen = true;
     this.bus.emit('level:won', {});
+    this.audio.play('win');
     this.cameras.main.flash(400, 126, 231, 135);
     this.finish({ outcome: 'win' });
   }
@@ -188,6 +218,10 @@ export class GameScene extends Phaser.Scene {
       this.run.poopProgress = this.poop.state.progress;
       const outcome = this.run.tick(dt, this.player.stance === 'run' && this.player.speed > 1, this.player.x, this.player.y);
       if (this.exitSprite) this.exitSprite.setAlpha(this.run.objectives.exitOpen ? 1 : 0.35);
+      if (this.run.objectives.exitOpen && !this.exitWasOpen) {
+        this.exitWasOpen = true;
+        this.audio.play('exitOpen');
+      }
       if (outcome === 'won') this.win();
       else if (outcome === 'accident') this.lose('accident');
     }

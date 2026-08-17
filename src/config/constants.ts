@@ -34,6 +34,7 @@ export const REGISTRY = {
   DEBUG_FLAGS: 'debugFlags',
   ART_MODE: 'artMode',
   SAVE: 'save',
+  AUDIO: 'audio',
 } as const;
 
 export const APP_VERSION: string = __APP_VERSION__;
