@@ -47,6 +47,36 @@ test('boots to the main menu, starts the game on tap, no console errors', async 
   expect(errors, errors.join('\n')).toEqual([]);
 });
 
+// Regression: Button hit areas were centered rectangles, but Phaser tests Container hit areas in origin-normalized
+// space, so only the top-left quadrant of each button (plus its exact center) reacted — thumb taps mostly missed on iOS.
+test('menu buttons respond to off-center taps, not just the exact center', async ({ page, hasTouch }) => {
+  const errors = collectErrors(page);
+  await page.goto('/');
+  const canvas = page.locator('#game canvas');
+  await waitForScene(page, 'MainMenu');
+  const box = (await canvas.boundingBox())!;
+  const s = box.width / 1280; // CSS px per game px
+  // Game-space coordinates → page coordinates.
+  const tap = async (gx: number, gy: number) => {
+    const x = box.x + gx * s;
+    const y = box.y + gy * s;
+    if (hasTouch) await page.touchscreen.tap(x, y);
+    else await page.mouse.click(x, y);
+  };
+
+  // "Levels" button: centered at (640, 507.6), 300×64 → press near its bottom-right corner.
+  await tap(640 + 130, 507.6 + 26);
+  await waitForScene(page, 'LevelSelect');
+  // "‹ Back" button: centered at (90, 40), 130×48 → press near its bottom-right corner.
+  await tap(90 + 55, 40 + 18);
+  await waitForScene(page, 'MainMenu');
+  // "Play" button: centered at (640, 417.6), 300×72 → press right-of-center and low.
+  await tap(640 + 120, 417.6 + 28);
+  await waitForScene(page, 'Game');
+
+  expect(errors, errors.join('\n')).toEqual([]);
+});
+
 test('keyboard moves Angelina and bushes hide her', async ({ page, isMobile }) => {
   test.skip(isMobile, 'keyboard-only');
   const errors = collectErrors(page);

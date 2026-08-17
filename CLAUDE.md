@@ -36,6 +36,10 @@ Full design/milestone plan: `~/.claude/plans/wise-dancing-walrus.md` (M0 scaffol
 - Avoid v4-only features (filters, lighting, TilemapGPULayer) unless needed, so a fallback to 3.90 stays cheap.
 
 ## iOS testing notes
-- No Safari Web Inspector on Linux → use `?debug=1` (eruda) and the in-game debug overlay; Playwright WebKit needs `sudo apt-get install libavif16`.
+- No Safari Web Inspector on Linux → use `?debug=1` (eruda) and the in-game debug overlay; Playwright WebKit needs `libavif16`
+  (`sudo apt-get install libavif16`, or without sudo: `apt-get download libavif16 libgav1-1 libyuv0`, `dpkg-deb -x` each, and copy the
+  `.so*` files into `~/.cache/ms-playwright/webkit-*/minibrowser-{wpe,gtk}/sys/lib/`). Then `PW_WEBKIT=1 npm run test:e2e`.
+- Phaser tests Container hit areas in origin-normalized space (adds `displayOriginX/Y` = w/2,h/2 after `setSize`): a Container's
+  hit `Rectangle` must start at (0,0), not (-w/2,-h/2) — see `src/game/ui/Button.ts`. Verify tap targets with off-center taps, not center clicks.
 - Guards for scroll/zoom live in `src/styles.css` + `src/platform/ios.ts`; audio must start after a user gesture (menu "tap to start").
 - HTTPS-only features (service worker, wake lock) are verified on the deployed GitHub Pages URL.

@@ -30,7 +30,10 @@ export class Button extends Phaser.GameObjects.Container {
     this.setSize(this.btnW, this.btnH);
     this.setDepth(DEPTH.UI);
     this.draw(1);
-    this.setInteractive(new Phaser.Geom.Rectangle(-this.btnW / 2, -this.btnH / 2, this.btnW, this.btnH), Phaser.Geom.Rectangle.Contains);
+    // Container hit areas are tested in origin-normalized space: Phaser adds displayOriginX/Y (= w/2, h/2 after
+    // setSize) to the local pointer position, so the rectangle must start at (0, 0), NOT at (-w/2, -h/2). A centered
+    // rectangle would shift the live region up-left by half a button (only the top-left quadrant responds).
+    this.setInteractive(new Phaser.Geom.Rectangle(0, 0, this.btnW, this.btnH), Phaser.Geom.Rectangle.Contains);
     this.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => this.draw(1.08));
     this.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT, () => this.draw(1));
     this.on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => this.draw(0.85));
