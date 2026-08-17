@@ -1,0 +1,205 @@
+{
+  "type": "tileset",
+  "version": "1.10",
+  "name": "placeholder",
+  "image": "placeholder-tiles.png",
+  "imagewidth": 288,
+  "imageheight": 32,
+  "tilewidth": 32,
+  "tileheight": 32,
+  "tilecount": 9,
+  "columns": 9,
+  "margin": 0,
+  "spacing": 0,
+  "tiles": [
+    {
+      "id": 0,
+      "class": "grass",
+      "properties": [
+        {
+          "name": "collides",
+          "type": "bool",
+          "value": false
+        },
+        {
+          "name": "occludes",
+          "type": "bool",
+          "value": false
+        },
+        {
+          "name": "hides",
+          "type": "bool",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "class": "path",
+      "properties": [
+        {
+          "name": "collides",
+          "type": "bool",
+          "value": false
+        },
+        {
+          "name": "occludes",
+          "type": "bool",
+          "value": false
+        },
+        {
+          "name": "hides",
+          "type": "bool",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "class": "floor",
+      "properties": [
+        {
+          "name": "collides",
+          "type": "bool",
+          "value": false
+        },
+        {
+          "name": "occludes",
+          "type": "bool",
+          "value": false
+        },
+        {
+          "name": "hides",
+          "type": "bool",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "class": "wall",
+      "properties": [
+        {
+          "name": "collides",
+          "type": "bool",
+          "value": true
+        },
+        {
+          "name": "occludes",
+          "type": "bool",
+          "value": true
+        },
+        {
+          "name": "hides",
+          "type": "bool",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "class": "fence",
+      "properties": [
+        {
+          "name": "collides",
+          "type": "bool",
+          "value": true
+        },
+        {
+          "name": "occludes",
+          "type": "bool",
+          "value": false
+        },
+        {
+          "name": "hides",
+          "type": "bool",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "class": "bush",
+      "properties": [
+        {
+          "name": "collides",
+          "type": "bool",
+          "value": false
+        },
+        {
+          "name": "occludes",
+          "type": "bool",
+          "value": true
+        },
+        {
+          "name": "hides",
+          "type": "bool",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "class": "water",
+      "properties": [
+        {
+          "name": "collides",
+          "type": "bool",
+          "value": true
+        },
+        {
+          "name": "occludes",
+          "type": "bool",
+          "value": false
+        },
+        {
+          "name": "hides",
+          "type": "bool",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "class": "tree",
+      "properties": [
+        {
+          "name": "collides",
+          "type": "bool",
+          "value": true
+        },
+        {
+          "name": "occludes",
+          "type": "bool",
+          "value": true
+        },
+        {
+          "name": "hides",
+          "type": "bool",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "class": "locker",
+      "properties": [
+        {
+          "name": "collides",
+          "type": "bool",
+          "value": false
+        },
+        {
+          "name": "occludes",
+          "type": "bool",
+          "value": true
+        },
+        {
+          "name": "hides",
+          "type": "bool",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, SCENES } from '@/config/constants';
+import { GAME_HEIGHT, GAME_WIDTH, SCENES } from '@/config/constants';
 import type { BrainMode } from '@/core/ai/enemyBrain';
 import { TEX } from '@/game/art/AssetKeys';
 import type { InputManager } from '@/game/input/InputManager';
@@ -13,6 +13,8 @@ export interface HudSceneData {
   levelName: string;
   bus: EventBus;
   run: RunState;
+  /** Objective sentence for the intro card. */
+  intro: string;
 }
 
 const ALERT_RANK: Record<BrainMode, number> = { patrol: 0, return: 0, suspicious: 1, search: 1, chase: 2 };
@@ -29,6 +31,9 @@ export class HudScene extends Phaser.Scene {
   private countText!: Phaser.GameObjects.Text;
   private meter!: Phaser.GameObjects.Graphics;
   private run!: RunState;
+  private inputManager!: InputManager;
+  private intro: Phaser.GameObjects.Container | null = null;
+  private introAge = 0;
   private readonly enemyModes = new Map<string, BrainMode>();
 
   constructor() {
@@ -37,6 +42,7 @@ export class HudScene extends Phaser.Scene {
 
   create(data: HudSceneData): void {
     this.run = data.run;
+    this.inputManager = data.input;
     const useTouch = this.sys.game.device.input.touch || navigator.maxTouchPoints > 0;
     if (useTouch) {
       this.touch = new TouchSource(this);
@@ -63,6 +69,8 @@ export class HudScene extends Phaser.Scene {
     this.add.text(GAME_WIDTH - 44, 30, 'II', textStyle(20, THEME.colors.text, { fontStyle: 'bold' })).setOrigin(0.5);
     pauseBtn.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => data.bus.emit('ui:pause', {}));
 
+    this.showIntro(data.levelName, data.intro);
+
     this.enemyModes.clear();
     const offMode = data.bus.on('enemy:mode', ({ id, to }) => {
       this.enemyModes.set(id, to);
@@ -77,6 +85,28 @@ export class HudScene extends Phaser.Scene {
     });
   }
 
+  private showIntro(name: string, objective: string): void {
+    const cx = GAME_WIDTH / 2;
+    const cy = GAME_HEIGHT / 2;
+    const bg = this.add.graphics();
+    bg.fillStyle(0x000000, 0.7);
+    bg.fillRoundedRect(cx - 320, cy - 110, 640, 220, 18);
+    const title = this.add.text(cx, cy - 60, name, textStyle(40, THEME.colors.accent, { fontStyle: 'bold' })).setOrigin(0.5);
+    const obj = this.add.text(cx, cy, objective, textStyle(24, THEME.colors.text)).setOrigin(0.5);
+    const controls = this.touch ? 'Left thumb: move · GO: hold to poop · RUN: sprint (noisy!)' : 'WASD move · hold Space to poop · Shift run (noisy!) · C sneak';
+    const hint = this.add.text(cx, cy + 50, controls, textStyle(18, THEME.colors.textDim)).setOrigin(0.5);
+    const go = this.add.text(cx, cy + 86, 'Move to start', textStyle(16, THEME.colors.warn)).setOrigin(0.5);
+    this.intro = this.add.container(0, 0, [bg, title, obj, hint, go]);
+    this.introAge = 0;
+  }
+
+  private dismissIntro(): void {
+    if (!this.intro) return;
+    const c = this.intro;
+    this.intro = null;
+    this.tweens.add({ targets: c, alpha: 0, duration: 300, onComplete: () => c.destroy() });
+  }
+
   private refreshAlert(): void {
     let rank = 0;
     for (const m of this.enemyModes.values()) rank = Math.max(rank, ALERT_RANK[m]);
@@ -84,7 +114,11 @@ export class HudScene extends Phaser.Scene {
     this.alertText.setText(ALERT_LABEL[rank]!).setColor(colors[rank]!);
   }
 
-  override update(time: number): void {
+  override update(time: number, deltaMs: number): void {
+    if (this.intro) {
+      this.introAge += deltaMs / 1000;
+      if (this.introAge > 4 || this.inputManager.intent.moveMagnitude > 0.1 || this.inputManager.intent.actionPressed) this.dismissIntro();
+    }
     const u = this.run.urgency;
     const g = this.meter;
     g.clear();

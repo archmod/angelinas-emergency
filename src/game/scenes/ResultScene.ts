@@ -1,8 +1,11 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH, SCENES } from '@/config/constants';
+import { GAME_HEIGHT, GAME_WIDTH, REGISTRY, SCENES } from '@/config/constants';
+import { isUnlocked, nextLevelId, recordResult } from '@/core/rules/progress';
 import { computeScore, type RunStats } from '@/core/rules/score';
+import type { SaveManager } from '@/game/systems/SaveManager';
 import { Button } from '@/game/ui/Button';
 import { THEME, textStyle } from '@/game/ui/theme';
+import { CAMPAIGN } from '@/levels/registry';
 
 export interface ResultSceneData {
   outcome: 'win' | 'lose';
@@ -31,8 +34,13 @@ export class ResultScene extends Phaser.Scene {
 
     const s = data.stats;
     const lines = [`Time  ${fmtTime(s.timeSeconds)}  (par ${fmtTime(s.parSeconds)})`, `Suspicious  ${s.timesSuspicious}   Spotted  ${s.timesAlerted}`];
+    const save = this.registry.get(REGISTRY.SAVE) as SaveManager;
+    let nextId: string | null = null;
     if (win) {
       const score = computeScore(s);
+      save.set(recordResult(save.get(), data.levelId, { stars: score.stars, rank: score.rank, score: score.score, timeSeconds: s.timeSeconds }));
+      const candidate = nextLevelId(CAMPAIGN, data.levelId);
+      if (candidate && isUnlocked(save.get(), CAMPAIGN, candidate)) nextId = candidate;
       this.add.text(cx, GAME_HEIGHT * 0.42, score.rank, textStyle(120, THEME.colors.accent, { fontStyle: 'bold' })).setOrigin(0.5);
       this.add.text(cx, GAME_HEIGHT * 0.42 + 78, `${'★'.repeat(score.stars)}${'☆'.repeat(3 - score.stars)}   ${score.score} pts`, textStyle(28, THEME.colors.warn)).setOrigin(0.5);
     }
@@ -40,10 +48,19 @@ export class ResultScene extends Phaser.Scene {
 
     const retry = () => this.scene.start(SCENES.GAME, { levelId: data.levelId });
     const menu = () => this.scene.start(SCENES.MAIN_MENU);
-    new Button(this, cx - 150, GAME_HEIGHT * 0.84, win ? 'Play again' : 'Try again', retry);
-    new Button(this, cx + 150, GAME_HEIGHT * 0.84, 'Main menu', menu, { color: 0x9aa4b2 });
-    this.input.keyboard?.once('keydown-SPACE', retry);
-    this.input.keyboard?.once('keydown-ENTER', retry);
+    const next = () => nextId && this.scene.start(SCENES.GAME, { levelId: nextId });
+    const primary = nextId ? next : retry;
+    const y = GAME_HEIGHT * 0.84;
+    if (nextId) {
+      new Button(this, cx - 290, y, 'Next level ›', next, { width: 250 });
+      new Button(this, cx, y, 'Play again', retry, { width: 250, color: 0xffd166 });
+      new Button(this, cx + 290, y, 'Main menu', menu, { width: 250, color: 0x9aa4b2 });
+    } else {
+      new Button(this, cx - 150, y, win ? 'Play again' : 'Try again', retry);
+      new Button(this, cx + 150, y, 'Main menu', menu, { color: 0x9aa4b2 });
+    }
+    this.input.keyboard?.once('keydown-SPACE', primary);
+    this.input.keyboard?.once('keydown-ENTER', primary);
     this.input.keyboard?.once('keydown-ESC', menu);
   }
 }

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, SCENES } from '@/config/constants';
 import { generatePlaceholderTextures } from '@/game/art/placeholders';
 import { THEME, textStyle } from '@/game/ui/theme';
+import { LEVELS } from '@/levels/registry';
 
 /** Loads/generates all assets with a progress bar, then starts the main menu. */
 export class PreloadScene extends Phaser.Scene {
@@ -26,7 +27,8 @@ export class PreloadScene extends Phaser.Scene {
       bar.destroy();
     });
 
-    // Nothing to fetch yet (placeholder art is generated in code). Real assets get queued here.
+    // Placeholder art is generated in code; only Tiled maps (if any) and, later, real assets are fetched.
+    for (const level of LEVELS) if (level.tiledUrl) this.load.json(level.id, level.tiledUrl);
   }
 
   create(): void {

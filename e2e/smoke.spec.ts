@@ -40,8 +40,8 @@ test('boots to the main menu, starts the game on tap, no console errors', async 
   expect(box!.height).toBeLessThanOrEqual(vp.height + 1);
   expect(box!.width / box!.height).toBeCloseTo(16 / 9, 1);
 
-  // Tap/click to start → Game scene.
-  await canvas.click({ position: { x: box!.width / 2, y: box!.height / 2 } });
+  // Tap the Play button (centered, 58% down) → Game scene.
+  await canvas.click({ position: { x: box!.width / 2, y: box!.height * 0.58 } });
   await waitForScene(page, 'Game');
 
   expect(errors, errors.join('\n')).toEqual([]);
@@ -50,7 +50,7 @@ test('boots to the main menu, starts the game on tap, no console errors', async 
 test('keyboard moves Angelina and bushes hide her', async ({ page, isMobile }) => {
   test.skip(isMobile, 'keyboard-only');
   const errors = collectErrors(page);
-  await page.goto('/');
+  await page.goto('/?level=test-01');
   await waitForScene(page, 'MainMenu');
   await page.keyboard.press('Space');
   await waitForScene(page, 'Game');
@@ -61,27 +61,24 @@ test('keyboard moves Angelina and bushes hide her', async ({ page, isMobile }) =
       return { x: s.player.x, y: s.player.y, hidden: s.player.hidden };
     });
   const start = await pos();
+  // Walk right until she's under the bush block (tiles 3..4 of row 2..3 in test-01), then down into it.
   await page.keyboard.down('d');
-  await page.waitForTimeout(600);
+  await page.waitForFunction(() => (window as unknown as { __game: { scene: { getScene(k: string): { player: { x: number } } } } }).__game.scene.getScene('Game').player.x >= 3.5 * 32, null, { timeout: 8000 });
   await page.keyboard.up('d');
   const moved = await pos();
   expect(moved.x).toBeGreaterThan(start.x + 40);
-
-  // Test level: bush block at tiles (3..4, 2..3) → walk down into it.
   await page.keyboard.down('s');
-  await page.waitForTimeout(450);
+  await page.waitForFunction(() => (window as unknown as { __game: { scene: { getScene(k: string): { player: { hidden: boolean } } } } }).__game.scene.getScene('Game').player.hidden, null, { timeout: 8000 });
   await page.keyboard.up('s');
-  await page.waitForTimeout(100);
   const inBush = await pos();
   expect(inBush.hidden).toBe(true);
-
   expect(errors.filter((e) => !e.includes('GPU stall')), errors.join('\n')).toEqual([]);
 });
 
 test('an enemy that sees Angelina chases and catches her → lose screen → retry', async ({ page, isMobile }) => {
   test.skip(isMobile, 'uses keyboard to start');
   const errors = collectErrors(page);
-  await page.goto('/?debug=1');
+  await page.goto('/?debug=1&level=test-01');
   await waitForScene(page, 'MainMenu');
   await page.keyboard.press('Space');
   await waitForScene(page, 'Game');
@@ -97,11 +94,11 @@ test('an enemy that sees Angelina chases and catches her → lose screen → ret
   const before = await snap();
   expect(before.mode).toBe('patrol');
 
-  // Drop Angelina 3 tiles directly in front of the ranger's current facing.
+  // Drop Angelina right in front of the ranger (inside his proximity radius → instant alert).
   await page.evaluate(() => {
     const s = (window as unknown as { __game: { scene: { getScene(k: string): { player: { setPosition(x: number, y: number): void }; enemies: { x: number; y: number; facing: number }[] } } } }).__game.scene.getScene('Game');
     const e = s.enemies[0]!;
-    s.player.setPosition(e.x + Math.cos(e.facing) * 96, e.y + Math.sin(e.facing) * 96);
+    s.player.setPosition(e.x + Math.cos(e.facing) * 30, e.y + Math.sin(e.facing) * 30);
   });
   await page.waitForFunction(
     () => (window as unknown as { __game: { scene: { getScene(k: string): { enemies: { mode: string }[] } } } }).__game.scene.getScene('Game').enemies[0]!.mode === 'chase',
@@ -131,7 +128,7 @@ test('an enemy that sees Angelina chases and catches her → lose screen → ret
 test('hold GO on a spot to poop, then reach the exit to win', async ({ page, isMobile }) => {
   test.skip(isMobile, 'uses keyboard');
   const errors = collectErrors(page);
-  await page.goto('/?debug=1&god=1'); // god: enemies can't catch her, keeps the test deterministic
+  await page.goto('/?debug=1&god=1&level=test-01'); // god: enemies can't catch her, keeps the test deterministic
   await waitForScene(page, 'MainMenu');
   await page.keyboard.press('Space');
   await waitForScene(page, 'Game');

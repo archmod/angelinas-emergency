@@ -54,7 +54,7 @@ export class GameScene extends Phaser.Scene {
     this.flags = this.registry.get(REGISTRY.DEBUG_FLAGS) as DebugFlags;
     const levelId = data.levelId ?? this.flags.level ?? DEFAULT_LEVEL_ID;
     this.entry = getLevel(levelId);
-    const levelData = this.entry.load();
+    const levelData = this.entry.load({ json: (key) => this.cache.json.get(key) as unknown });
 
     this.bus = new EventBus();
     this.level = buildLevel(this, levelData);
@@ -81,7 +81,9 @@ export class GameScene extends Phaser.Scene {
 
     this.inputManager = new InputManager();
     this.inputManager.addSource(new KeyboardSource(this));
-    this.scene.launch(SCENES.HUD, { input: this.inputManager, levelName: this.entry.name, bus: this.bus, run: this.run });
+    const req = levelData.rules.requiredPoops;
+    const intro = `Poop ${req === 1 ? 'once' : `${req} times`} without getting caught${levelData.rules.exitRequired ? ', then reach the exit' : ''}.`;
+    this.scene.launch(SCENES.HUD, { input: this.inputManager, levelName: this.entry.name, bus: this.bus, run: this.run, intro });
 
     setupCamera(this, this.player, this.level.worldWidth, this.level.worldHeight);
 

@@ -33,6 +33,7 @@ export const DEPTH = {
 export const REGISTRY = {
   DEBUG_FLAGS: 'debugFlags',
   ART_MODE: 'artMode',
+  SAVE: 'save',
 } as const;
 
 export const APP_VERSION: string = __APP_VERSION__;

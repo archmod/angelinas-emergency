@@ -1,0 +1,31 @@
+{
+  "type": "map", "version": "1.10", "orientation": "orthogonal", "renderorder": "right-down", "infinite": false,
+  "width": 6, "height": 5, "tilewidth": 32, "tileheight": 32,
+  "properties": [
+    { "name": "name", "type": "string", "value": "Fixture Park" },
+    { "name": "requiredPoops", "type": "int", "value": 2 },
+    { "name": "parSeconds", "type": "int", "value": 45 }
+  ],
+  "tilesets": [
+    { "firstgid": 1, "name": "placeholder", "tilewidth": 32, "tileheight": 32, "tilecount": 9, "columns": 9,
+      "tiles": [ { "id": 4, "properties": [ { "name": "occludes", "type": "bool", "value": true } ] } ] }
+  ],
+  "layers": [
+    { "type": "tilelayer", "name": "ground", "width": 6, "height": 5, "data": [1,1,1,1,1,1, 1,1,1,1,1,1, 1,2,2,2,2,1, 1,1,1,1,1,1, 1,1,1,1,1,0] },
+    { "type": "tilelayer", "name": "walls",  "width": 6, "height": 5, "data": [4,4,4,4,4,4, 4,0,0,0,0,4, 4,0,5,0,0,4, 4,0,0,0,7,4, 4,4,4,4,4,4] },
+    { "type": "tilelayer", "name": "cover",  "width": 6, "height": 5, "data": [0,0,0,0,0,0, 0,0,0,6,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0] },
+    { "type": "objectgroup", "name": "player", "objects": [ { "id": 1, "point": true, "x": 48, "y": 48, "class": "player" } ] },
+    { "type": "objectgroup", "name": "patrols", "objects": [ { "id": 2, "name": "route-a", "x": 48, "y": 112, "polyline": [ { "x": 0, "y": 0 }, { "x": 64, "y": 0 } ] } ] },
+    { "type": "objectgroup", "name": "enemies", "objects": [
+      { "id": 3, "name": "ranger-main", "point": true, "x": 0, "y": 0, "class": "ranger",
+        "properties": [ { "name": "kind", "type": "string", "value": "ranger" }, { "name": "patrol", "type": "string", "value": "route-a" }, { "name": "mode", "type": "string", "value": "pingpong" } ] },
+      { "id": 4, "point": true, "x": 144, "y": 48, "class": "camera",
+        "properties": [ { "name": "kind", "type": "string", "value": "camera" }, { "name": "scanFrom", "type": "int", "value": 90 }, { "name": "scanTo", "type": "int", "value": 180 } ] }
+    ] },
+    { "type": "objectgroup", "name": "spots", "objects": [
+      { "id": 5, "x": 32, "y": 96, "width": 32, "height": 32, "class": "hidden" },
+      { "id": 6, "x": 96, "y": 96, "width": 32, "height": 32, "class": "exposed", "properties": [ { "name": "duration", "type": "float", "value": 0.5 } ] }
+    ] },
+    { "type": "objectgroup", "name": "exit", "objects": [ { "id": 7, "x": 128, "y": 32, "width": 32, "height": 32 } ] }
+  ]
+}
