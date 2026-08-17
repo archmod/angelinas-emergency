@@ -174,9 +174,13 @@ export function parseTiledMap(map: TiledMap, meta: LevelMeta): LevelData {
     }
     const mode = (p.mode as PatrolMode | undefined) ?? (patrol.length > 0 ? 'loop' : 'stationary');
     const pos = patrol.length > 0 && mode !== 'stationary' ? patrol[0]! : { x: o.x, y: o.y };
-    const facingDeg = p.facing !== undefined ? Number(p.facing) : patrol.length > 1 ? radToDeg(angleTo(patrol[0]!, patrol[1]!)) : 0;
+    const scan: [number, number] | undefined = p.scanFrom !== undefined && p.scanTo !== undefined ? [Number(p.scanFrom), Number(p.scanTo)] : undefined;
+    let facingDeg: number;
+    if (p.facing !== undefined) facingDeg = Number(p.facing);
+    else if (scan) facingDeg = (scan[0] + scan[1]) / 2;
+    else facingDeg = patrol.length > 1 ? radToDeg(angleTo(patrol[0]!, patrol[1]!)) : 0;
     const spawn: EnemySpawn = { id: eid, kind, pos, facingDeg, patrol, patrolMode: mode };
-    if (p.scanFrom !== undefined && p.scanTo !== undefined) spawn.scanDeg = [Number(p.scanFrom), Number(p.scanTo)];
+    if (scan) spawn.scanDeg = scan;
     return spawn;
   });
 

@@ -1,8 +1,12 @@
 import { parseAsciiLevel, type AsciiLevelDef } from '@/core/level/asciiLevel';
 import { parseTiledMap, type TiledMap } from '@/core/level/parseTiled';
 import type { LevelData, LevelMeta, WorldId } from '@/core/level/schema';
+import { NEIGHBORHOOD_01 } from './ascii/neighborhood01';
+import { NEIGHBORHOOD_02 } from './ascii/neighborhood02';
 import { PARK_01 } from './ascii/park01';
 import { PARK_02 } from './ascii/park02';
+import { SCHOOL_01 } from './ascii/school01';
+import { SCHOOL_02 } from './ascii/school02';
 import { TEST_01 } from './ascii/test01';
 
 /** What a level loader may ask the engine for (Tiled maps are fetched by PreloadScene into the JSON cache). */
@@ -45,7 +49,15 @@ export const tiled = (meta: LevelMeta, url: string, extra: Partial<LevelEntry> =
 });
 
 /** Progression order. Level select groups these by world. */
-export const LEVELS: readonly LevelEntry[] = [ascii(PARK_01), ascii(PARK_02), ascii(TEST_01, { hidden: true })];
+export const LEVELS: readonly LevelEntry[] = [
+  ascii(PARK_01),
+  ascii(PARK_02),
+  ascii(NEIGHBORHOOD_01),
+  ascii(NEIGHBORHOOD_02),
+  ascii(SCHOOL_01),
+  ascii(SCHOOL_02),
+  ascii(TEST_01, { hidden: true }),
+];
 
 /** Levels shown in the campaign, in unlock order. */
 export const CAMPAIGN: readonly LevelEntry[] = LEVELS.filter((l) => !l.hidden);

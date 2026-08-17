@@ -206,7 +206,8 @@ export function parseAsciiLevel(def: AsciiLevelDef, tileSize: number = TILE_SIZE
     }
     let facingDeg = e.facingDeg;
     if (facingDeg === undefined) {
-      facingDeg = patrol.length > 1 ? radToDeg(angleTo(patrol[0]!, patrol[1]!)) : 0;
+      if (e.scanDeg) facingDeg = (e.scanDeg[0] + e.scanDeg[1]) / 2;
+      else facingDeg = patrol.length > 1 ? radToDeg(angleTo(patrol[0]!, patrol[1]!)) : 0;
     }
     const spawn: EnemySpawn = { id, kind: e.kind, pos, facingDeg, patrol, patrolMode: mode };
     if (e.scanDeg) spawn.scanDeg = e.scanDeg;

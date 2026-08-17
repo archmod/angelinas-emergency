@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH, REGISTRY, SCENES } from '@/config/constants';
+import { GAME_WIDTH, REGISTRY, SCENES } from '@/config/constants';
 import type { WorldId } from '@/core/level/schema';
 import { isUnlocked } from '@/core/rules/progress';
 import type { SaveManager } from '@/game/systems/SaveManager';
@@ -46,9 +46,6 @@ export class LevelSelectScene extends Phaser.Scene {
         });
       });
       y += Math.ceil(levels.length / perRow) * (CARD_H + GAP) + 16;
-    }
-    if (y < GAME_HEIGHT * 0.9) {
-      this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 40, 'More worlds coming: the neighborhood and the school…', textStyle(16, THEME.colors.textDim)).setOrigin(0.5);
     }
   }
 

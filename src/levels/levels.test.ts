@@ -3,7 +3,21 @@ import { getEnemyDef } from '@/config/enemies';
 import { findPathWorld } from '@/core/grid/astar';
 import { Grid } from '@/core/grid/Grid';
 import type { Rect } from '@/core/level/schema';
+import { NEIGHBORHOOD_01 } from './ascii/neighborhood01';
+import { NEIGHBORHOOD_02 } from './ascii/neighborhood02';
+import { PARK_01 } from './ascii/park01';
+import { PARK_02 } from './ascii/park02';
+import { SCHOOL_01 } from './ascii/school01';
+import { SCHOOL_02 } from './ascii/school02';
+import { TEST_01 } from './ascii/test01';
 import { LEVELS } from './registry';
+
+describe('ascii maps are rectangular', () => {
+  it.each([PARK_01, PARK_02, NEIGHBORHOOD_01, NEIGHBORHOOD_02, SCHOOL_01, SCHOOL_02, TEST_01].map((d) => [d.meta.id, d] as const))('%s', (_id, def) => {
+    const widths = new Set(def.map.map((r) => r.length));
+    expect([...widths], `rows have widths ${[...widths].join(',')}`).toHaveLength(1);
+  });
+});
 
 const center = (r: Rect) => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 });
 
