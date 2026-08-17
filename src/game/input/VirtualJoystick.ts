@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { BALANCE } from '@/config/balance';
 import { DEPTH, GAME_WIDTH } from '@/config/constants';
+import { joystickVector } from '@/core/input/joystick';
 import { TEX } from '@/game/art/AssetKeys';
 
 /**
@@ -27,7 +28,10 @@ export class VirtualJoystick {
     scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.onMove, this);
     scene.input.on(Phaser.Input.Events.POINTER_UP, this.onUp, this);
     scene.input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.onUp, this);
-    scene.input.on(Phaser.Input.Events.GAME_OUT, this.release, this);
+    // Deliberately NOT releasing on GAME_OUT: on phones the finger often slides off the canvas into the
+    // letterbox / safe-area bar mid-push. Phaser stops sending moves while it is outside, so we hold the
+    // last vector instead of stopping the player; POINTER_UP(_OUTSIDE) still arrives wherever the finger
+    // lifts (window listeners), and `vector` self-releases if the tracked pointer is no longer down.
   }
 
   /** Unit-ish vector (length 0..1). */
@@ -59,25 +63,10 @@ export class VirtualJoystick {
 
   private onMove(pointer: Phaser.Input.Pointer): void {
     if (pointer.id !== this.pointerId) return;
-    const r = BALANCE.touch.joystickRadius;
-    let dx = pointer.x - this.baseX;
-    let dy = pointer.y - this.baseY;
-    const len = Math.hypot(dx, dy);
-    if (len > r) {
-      dx = (dx / len) * r;
-      dy = (dy / len) * r;
-    }
-    this.thumb.setPosition(this.baseX + dx, this.baseY + dy);
-    const m = Math.min(1, len / r);
-    const dz = BALANCE.touch.joystickDeadzone;
-    if (m < dz) {
-      this.vx = 0;
-      this.vy = 0;
-    } else {
-      const scaled = (m - dz) / (1 - dz);
-      this.vx = (dx / (len || 1)) * scaled;
-      this.vy = (dy / (len || 1)) * scaled;
-    }
+    const s = joystickVector(pointer.x - this.baseX, pointer.y - this.baseY, BALANCE.touch.joystickRadius, BALANCE.touch.joystickDeadzone);
+    this.thumb.setPosition(this.baseX + s.thumbDx, this.baseY + s.thumbDy);
+    this.vx = s.x;
+    this.vy = s.y;
   }
 
   private onUp(pointer: Phaser.Input.Pointer): void {
@@ -98,7 +87,6 @@ export class VirtualJoystick {
     this.scene.input.off(Phaser.Input.Events.POINTER_MOVE, this.onMove, this);
     this.scene.input.off(Phaser.Input.Events.POINTER_UP, this.onUp, this);
     this.scene.input.off(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.onUp, this);
-    this.scene.input.off(Phaser.Input.Events.GAME_OUT, this.release, this);
     this.base.destroy();
     this.thumb.destroy();
   }

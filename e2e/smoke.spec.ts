@@ -77,6 +77,59 @@ test('menu buttons respond to off-center taps, not just the exact center', async
   expect(errors, errors.join('\n')).toEqual([]);
 });
 
+// Regression: the virtual joystick divided the rim-clamped thumb offset by the raw finger distance (dragging past the
+// ring slowed the player down), and released on GAME_OUT (finger sliding into the letterbox bar stopped the player).
+test('virtual joystick: full speed past the ring and while the finger is off-canvas', async ({ page, browserName, hasTouch }) => {
+  test.skip(browserName !== 'chromium' || !hasTouch, 'drives raw touch events through CDP');
+  await page.goto('/?level=test-01');
+  await waitForScene(page, 'MainMenu');
+  const box = (await page.locator('#game canvas').boundingBox())!;
+  const s = box.width / 1280;
+  const g2p = (gx: number, gy: number) => ({ x: box.x + gx * s, y: box.y + gy * s });
+  await page.touchscreen.tap(g2p(640, 417.6).x, g2p(640, 417.6).y); // Play
+  await waitForScene(page, 'Hud');
+  await page.waitForTimeout(300);
+
+  const cdp = await page.context().newCDPSession(page);
+  const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd', p?: { x: number; y: number }) =>
+    cdp.send('Input.dispatchTouchEvent', { type, touchPoints: p ? [p] : [] });
+  const move = () =>
+    page.evaluate(() => {
+      const i = (window as unknown as { __game: { scene: { getScene(k: string): { inputManager: { intent: { moveX: number; moveY: number; moveMagnitude: number } } } } } }).__game.scene.getScene('Hud').inputManager.intent;
+      return { x: i.moveX, y: i.moveY, m: i.moveMagnitude };
+    });
+  const settle = () => page.waitForTimeout(120);
+
+  // Stick base near the left edge; drag right well past the 64 px ring → magnitude pinned at 1, direction kept.
+  await touch('touchStart', g2p(120, 400));
+  await touch('touchMove', g2p(120 + 400, 400));
+  await settle();
+  let m = await move();
+  expect(m.m).toBeCloseTo(1, 2);
+  expect(m.x).toBeCloseTo(1, 2);
+  await touch('touchMove', g2p(120 + 300, 400 - 300));
+  await settle();
+  m = await move();
+  expect(m.m).toBeCloseTo(1, 2);
+  expect(m.x).toBeCloseTo(Math.SQRT1_2, 2);
+  expect(m.y).toBeCloseTo(-Math.SQRT1_2, 2);
+
+  // Push left until the finger leaves the canvas (into the letterbox bar) → keeps moving left, not stopped.
+  await touch('touchMove', g2p(20, 400));
+  await settle();
+  await touch('touchMove', { x: Math.max(1, box.x - 20), y: g2p(0, 400).y });
+  await settle();
+  m = await move();
+  expect(m.m).toBeCloseTo(1, 2);
+  expect(m.x).toBeCloseTo(-1, 2);
+
+  // Lifting the finger (still off-canvas) releases the stick.
+  await touch('touchEnd');
+  await settle();
+  m = await move();
+  expect(m.m).toBe(0);
+});
+
 test('keyboard moves Angelina and bushes hide her', async ({ page, isMobile }) => {
   test.skip(isMobile, 'keyboard-only');
   const errors = collectErrors(page);
