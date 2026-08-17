@@ -21,5 +21,8 @@ export const walkAnim = (textureKey: string): string => `${textureKey}:walk`;
 /** Character sprites are drawn at 2× and displayed at this scale. */
 export const CHARACTER_SCALE = 0.5;
 
+/** Spot/exit marker textures are drawn at 2× (one marker = one grid tile); tileSprites need this tile scale. */
+export const SPOT_TEXTURE_SIZE = 64;
+
 /** Name of the tileset inside the (blank/procedural) tilemap. Must match what LevelLoader passes to addTilesetImage. */
 export const TILESET_NAME = 'placeholder';

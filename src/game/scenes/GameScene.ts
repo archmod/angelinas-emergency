@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 import { BALANCE } from '@/config/balance';
 import { DEPTH, REGISTRY, SCENES } from '@/config/constants';
+import { TILE_SIZE } from '@/config/tiles';
 import type { Rect } from '@/core/level/schema';
-import { TEX } from '@/game/art/AssetKeys';
+import { SPOT_TEXTURE_SIZE, TEX } from '@/game/art/AssetKeys';
 import type { AudioSystem } from '@/game/audio/AudioSystem';
 import { DebugOverlay } from '@/game/debug/DebugOverlay';
 import type { DebugFlags } from '@/game/debug/flags';
@@ -122,7 +123,10 @@ export class GameScene extends Phaser.Scene {
 
   private drawZones(): void {
     const { poopSpots, exit } = this.level.data;
-    const rect = (r: Rect, key: string) => this.add.tileSprite(r.x + r.w / 2, r.y + r.h / 2, r.w, r.h, key).setDepth(DEPTH.SPOTS);
+    // Marker textures are 2× (SPOT_TEXTURE_SIZE); tile them so exactly one marker fills each grid tile of the zone.
+    const tileScale = TILE_SIZE / SPOT_TEXTURE_SIZE;
+    const rect = (r: Rect, key: string) =>
+      this.add.tileSprite(r.x + r.w / 2, r.y + r.h / 2, r.w, r.h, key).setTileScale(tileScale, tileScale).setDepth(DEPTH.SPOTS);
     for (const s of poopSpots) rect(s.rect, s.cover === 'hidden' ? TEX.SPOT_HIDDEN : TEX.SPOT_EXPOSED);
     if (exit) this.exitSprite = rect(exit, TEX.EXIT).setAlpha(0.35);
   }
