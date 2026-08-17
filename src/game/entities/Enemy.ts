@@ -13,7 +13,7 @@ import {
 import type { SightResult } from '@/core/detection/vision';
 import type { EnemySpawn } from '@/core/level/schema';
 import { degToRad, dist, rotateTowards, type Vec2 } from '@/core/math/vec';
-import { TEX } from '@/game/art/AssetKeys';
+import { CHARACTER_SCALE, enemyTexture, walkAnim } from '@/game/art/AssetKeys';
 import type { EventBus } from '@/game/systems/EventBus';
 import type { NavSystem } from '@/game/systems/NavSystem';
 import type { NoiseSystem } from '@/game/systems/NoiseSystem';
@@ -60,14 +60,15 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     private readonly bus: EventBus,
     private readonly noise: NoiseSystem,
   ) {
-    super(scene, spawn.pos.x, spawn.pos.y, TEX.ENEMY);
+    super(scene, spawn.pos.x, spawn.pos.y, enemyTexture(getEnemyDef(spawn.kind).kind), 0);
     this.id = spawn.id;
     this.def = getEnemyDef(spawn.kind);
     scene.add.existing(this);
     scene.physics.add.existing(this);
-    this.body.setCircle(12, this.width / 2 - 12, this.height / 2 - 12);
+    this.setScale(CHARACTER_SCALE);
+    const r = 12 / CHARACTER_SCALE;
+    this.body.setCircle(r, this.width / 2 - r, this.height / 2 - r);
     this.body.setCollideWorldBounds(true);
-    this.setTint(this.def.color);
     this.setDepth(DEPTH.ENEMIES);
     this.facing = degToRad(spawn.facingDeg);
     this.desiredFacing = this.facing;
@@ -119,6 +120,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   tick(dt: number, player: PlayerSnapshot): void {
     if (this.stunTimer > 0) {
       this.stunTimer -= dt;
+      this.animateWalk(0);
       this.setRotation(this.rotation + 14 * dt);
       this.icon.setPosition(this.x, this.y - 26);
       if (this.stunTimer <= 0) {
@@ -148,10 +150,22 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     const speed = this.moveRun ? this.def.chaseSpeed : this.def.speed;
     this.mover.update(dt, speed);
     if (!this.mover.arrived) this.desiredFacing = this.mover.heading;
+    this.animateWalk(this.mover.arrived ? 0 : speed);
     this.facing = rotateTowards(this.facing, this.desiredFacing, degToRad(this.def.turnRateDeg) * dt);
     this.setRotation(this.facing);
 
     this.icon.setPosition(this.x, this.y - 26);
+  }
+
+  private animateWalk(speed: number): void {
+    const key = walkAnim(this.texture.key);
+    if (speed > 5 && this.scene.anims.exists(key)) {
+      if (!this.anims.isPlaying) this.play(key);
+      this.anims.timeScale = Math.max(0.6, Math.min(2, speed / 100));
+    } else if (this.anims.isPlaying) {
+      this.stop();
+      this.setFrame(0);
+    }
   }
 
   private apply(c: BrainCommand): void {

@@ -50,7 +50,7 @@ export class HudScene extends Phaser.Scene {
     }
 
     // Top-left: urgency meter with a poop icon.
-    this.add.image(28, 26, TEX.POOP).setScale(0.9);
+    this.add.image(28, 26, TEX.POOP).setScale(0.6);
     this.meter = this.add.graphics();
     this.add.text(50, 40, 'URGENCY', textStyle(12, THEME.colors.textDim));
 

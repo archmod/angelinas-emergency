@@ -5,7 +5,7 @@ import type { Grid } from '@/core/grid/Grid';
 import type { NoiseEvent } from '@/core/detection/noise';
 import type { InputIntent } from '@/core/input/intent';
 import { degToRad, rotateTowards } from '@/core/math/vec';
-import { TEX } from '@/game/art/AssetKeys';
+import { CHARACTER_SCALE, TEX, walkAnim } from '@/game/art/AssetKeys';
 
 export type Stance = 'sneak' | 'walk' | 'run';
 
@@ -23,10 +23,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private stepDistance = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number, private readonly grid: Grid) {
-    super(scene, x, y, TEX.PLAYER);
+    super(scene, x, y, TEX.PLAYER, 0);
     scene.add.existing(this);
     scene.physics.add.existing(this);
-    const r = BALANCE.player.bodyRadius;
+    this.setScale(CHARACTER_SCALE);
+    // Body radius is in source (unscaled) px; the body scales with the sprite.
+    const r = BALANCE.player.bodyRadius / CHARACTER_SCALE;
     this.body.setCircle(r, this.width / 2 - r, this.height / 2 - r);
     this.body.setCollideWorldBounds(true);
     this.setDepth(DEPTH.PLAYER);
@@ -43,9 +45,21 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     return this.stance === 'sneak' ? 0.6 : this.stance === 'run' ? 1.5 : 1;
   }
 
+  private animateWalk(speed: number): void {
+    if (speed > 5) {
+      const key = walkAnim(TEX.PLAYER);
+      if (!this.anims.isPlaying) this.play(key);
+      this.anims.timeScale = this.stance === 'run' ? 1.6 : this.stance === 'sneak' ? 0.6 : 1;
+    } else if (this.anims.isPlaying) {
+      this.stop();
+      this.setFrame(0);
+    }
+  }
+
   override update(intent: InputIntent, dt: number): void {
     if (this.frozen) {
       this.body.setVelocity(0, 0);
+      this.animateWalk(0);
       return;
     }
     this.stance = intent.sneak ? 'sneak' : intent.run ? 'run' : 'walk';
@@ -60,6 +74,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.facing = rotateTowards(this.facing, target, degToRad(BALANCE.player.turnRateDeg) * dt);
       this.setRotation(this.facing);
     }
+    this.animateWalk(speed);
 
     const t = this.grid.worldToTile({ x: this.x, y: this.y });
     this.hidden = this.grid.isHiding(t.x, t.y);
