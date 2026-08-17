@@ -78,7 +78,7 @@ test('keyboard moves Angelina and bushes hide her', async ({ page, isMobile }) =
   expect(errors.filter((e) => !e.includes('GPU stall')), errors.join('\n')).toEqual([]);
 });
 
-test('an enemy that sees Angelina chases and catches her, then the level restarts', async ({ page, isMobile }) => {
+test('an enemy that sees Angelina chases and catches her → lose screen → retry', async ({ page, isMobile }) => {
   test.skip(isMobile, 'uses keyboard to start');
   const errors = collectErrors(page);
   await page.goto('/?debug=1');
@@ -108,7 +108,15 @@ test('an enemy that sees Angelina chases and catches her, then the level restart
     null,
     { timeout: 6000 },
   );
-  // Caught → restart puts her back at the spawn point.
+  // Caught → result screen (lose) → retry puts her back at the spawn point.
+  await waitForScene(page, 'Result');
+  const resultTitle = await page.evaluate(() => {
+    const r = (window as unknown as { __game: { scene: { getScene(k: string): { children: { list: { text?: string }[] } } } } }).__game.scene.getScene('Result');
+    return r.children.list.map((c) => c.text).filter(Boolean);
+  });
+  expect(resultTitle.join(' ')).toContain('Caught!');
+  await page.keyboard.press('Space');
+  await waitForScene(page, 'Game');
   await page.waitForFunction(
     (spawn) => {
       const s = (window as unknown as { __game: { scene: { getScene(k: string): { player: { x: number; y: number }; enemies: { mode: string }[] } } } }).__game.scene.getScene('Game');
@@ -118,4 +126,64 @@ test('an enemy that sees Angelina chases and catches her, then the level restart
     { timeout: 8000 },
   );
   expect(errors.filter((e) => !e.includes('GPU stall')), errors.join('\n')).toEqual([]);
+});
+
+test('hold GO on a spot to poop, then reach the exit to win', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'uses keyboard');
+  const errors = collectErrors(page);
+  await page.goto('/?debug=1&god=1'); // god: enemies can't catch her, keeps the test deterministic
+  await waitForScene(page, 'MainMenu');
+  await page.keyboard.press('Space');
+  await waitForScene(page, 'Game');
+  await page.waitForTimeout(200);
+
+  type G = {
+    player: { setPosition(x: number, y: number): void };
+    run: { poopsCompleted: number; objectives: { exitOpen: boolean; won: boolean } };
+    level: { data: { poopSpots: { rect: { x: number; y: number; w: number; h: number } }[]; exit: { x: number; y: number; w: number; h: number } } };
+  };
+  const gameScene = (): G => (window as unknown as { __game: { scene: { getScene(k: string): G } } }).__game.scene.getScene('Game');
+
+  // Teleport onto the first (hidden) spot and hold Space.
+  await page.evaluate((fnSrc) => {
+    const g = (new Function(`return (${fnSrc})()`) as () => G)();
+    const r = g.level.data.poopSpots[0]!.rect;
+    g.player.setPosition(r.x + r.w / 2, r.y + r.h / 2);
+  }, gameScene.toString());
+  await page.keyboard.down('Space');
+  await page.waitForFunction((fnSrc) => (new Function(`return (${fnSrc})()`) as () => G)().run.poopsCompleted >= 1, gameScene.toString(), { timeout: 8000 });
+  await page.keyboard.up('Space');
+  expect(await page.evaluate((fnSrc) => (new Function(`return (${fnSrc})()`) as () => G)().run.objectives.exitOpen, gameScene.toString())).toBe(true);
+
+  // Walk into the exit → win → Result scene.
+  await page.evaluate((fnSrc) => {
+    const g = (new Function(`return (${fnSrc})()`) as () => G)();
+    const e = g.level.data.exit;
+    g.player.setPosition(e.x + e.w / 2, e.y + e.h / 2);
+  }, gameScene.toString());
+  await waitForScene(page, 'Result');
+  const texts = await page.evaluate(() => {
+    const r = (window as unknown as { __game: { scene: { getScene(k: string): { children: { list: { text?: string }[] } } } } }).__game.scene.getScene('Result');
+    return r.children.list.map((c) => c.text).filter(Boolean).join(' ');
+  });
+  expect(texts).toContain('Relief!');
+  expect(errors.filter((e) => !e.includes('GPU stall')), errors.join('\n')).toEqual([]);
+});
+
+test('Esc pauses and resumes the game', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'uses keyboard');
+  await page.goto('/');
+  await waitForScene(page, 'MainMenu');
+  await page.keyboard.press('Space');
+  await waitForScene(page, 'Game');
+  await page.waitForTimeout(200);
+  await page.keyboard.press('Escape');
+  await waitForScene(page, 'Pause');
+  const paused = await page.evaluate(() => (window as unknown as { __game: { scene: { isPaused(k: string): boolean } } }).__game.scene.isPaused('Game'));
+  expect(paused).toBe(true);
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => {
+    const g = (window as unknown as { __game: { scene: { isPaused(k: string): boolean; isActive(k: string): boolean } } }).__game;
+    return !g.scene.isPaused('Game') && !g.scene.isActive('Pause');
+  });
 });

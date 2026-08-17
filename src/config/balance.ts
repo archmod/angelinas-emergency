@@ -18,6 +18,21 @@ export const BALANCE = {
     walk: { radius: 40, loudness: 0.25 },
     run: { radius: 140, loudness: 0.7 },
   } as Record<'sneak' | 'walk' | 'run', { radius: number; loudness: number } | null>,
+  poop: {
+    poopSeconds: 3,
+    decayPerSecond: 0.1,
+    noiseInterval: 0.8,
+    noiseRadius: 140,
+    noiseLoudness: 0.5,
+  },
+  urgency: {
+    runMultiplier: 1.5,
+    reliefPerPoop: 0.7,
+  },
+  enemy: {
+    /** How long an enemy is stalled after stepping in poop. */
+    slipSeconds: 1.6,
+  },
   camera: {
     zoom: 1.25,
     /** Follow smoothing (0..1 per frame, lower = smoother). */

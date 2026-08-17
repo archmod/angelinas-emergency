@@ -51,6 +51,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   private readonly mover: Mover;
   private readonly icon: Phaser.GameObjects.Text;
   private moveRun = false;
+  private stunTimer = 0;
 
   constructor(
     scene: Phaser.Scene,
@@ -103,7 +104,30 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     return { x: this.x, y: this.y };
   }
 
+  /** Stepping in poop: stall for a moment (spinning helplessly). */
+  slip(seconds: number): void {
+    if (this.stunTimer > 0) return;
+    this.stunTimer = seconds;
+    this.mover.stop();
+    this.icon.setText('@').setColor('#c99a5b');
+  }
+
+  get stunned(): boolean {
+    return this.stunTimer > 0;
+  }
+
   tick(dt: number, player: PlayerSnapshot): void {
+    if (this.stunTimer > 0) {
+      this.stunTimer -= dt;
+      this.setRotation(this.rotation + 14 * dt);
+      this.icon.setPosition(this.x, this.y - 26);
+      if (this.stunTimer <= 0) {
+        this.setRotation(this.facing);
+        const icon = ICON[this.brain.mode];
+        this.icon.setText(icon.text).setColor(icon.color);
+      }
+      return;
+    }
     const perception: Perception = {
       selfPos: this.pos,
       selfFacingRad: this.facing,

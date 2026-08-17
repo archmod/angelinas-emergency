@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { BALANCE } from '@/config/balance';
 import { DEPTH, REGISTRY, SCENES } from '@/config/constants';
 import type { Rect } from '@/core/level/schema';
 import { TEX } from '@/game/art/AssetKeys';
@@ -6,6 +7,7 @@ import { DebugOverlay } from '@/game/debug/DebugOverlay';
 import type { DebugFlags } from '@/game/debug/flags';
 import { Enemy, type PlayerSnapshot } from '@/game/entities/Enemy';
 import { Player } from '@/game/entities/Player';
+import type { Poop } from '@/game/entities/Poop';
 import { InputManager } from '@/game/input/InputManager';
 import { KeyboardSource } from '@/game/input/KeyboardSource';
 import { setupCamera } from '@/game/systems/CameraRig';
@@ -14,8 +16,11 @@ import { EventBus } from '@/game/systems/EventBus';
 import { buildLevel, type BuiltLevel } from '@/game/systems/LevelLoader';
 import { NavSystem } from '@/game/systems/NavSystem';
 import { NoiseSystem } from '@/game/systems/NoiseSystem';
+import { PoopSystem } from '@/game/systems/PoopSystem';
+import { RunState } from '@/game/systems/RunState';
 import { VisionConeRenderer } from '@/game/systems/VisionConeRenderer';
-import { DEFAULT_LEVEL_ID, getLevel } from '@/levels/registry';
+import { DEFAULT_LEVEL_ID, getLevel, type LevelEntry } from '@/levels/registry';
+import type { ResultSceneData } from './ResultScene';
 
 export interface GameSceneData {
   levelId?: string;
@@ -27,6 +32,9 @@ export class GameScene extends Phaser.Scene {
   player!: Player;
   enemies: Enemy[] = [];
   bus!: EventBus;
+  run!: RunState;
+  poop!: PoopSystem;
+  private entry!: LevelEntry;
   private inputManager!: InputManager;
   private nav!: NavSystem;
   private noise!: NoiseSystem;
@@ -34,6 +42,7 @@ export class GameScene extends Phaser.Scene {
   private cones!: VisionConeRenderer;
   private debug!: DebugOverlay;
   private flags!: DebugFlags;
+  private exitSprite: Phaser.GameObjects.TileSprite | null = null;
   private ended = false;
 
   constructor() {
@@ -44,13 +53,14 @@ export class GameScene extends Phaser.Scene {
     this.ended = false;
     this.flags = this.registry.get(REGISTRY.DEBUG_FLAGS) as DebugFlags;
     const levelId = data.levelId ?? this.flags.level ?? DEFAULT_LEVEL_ID;
-    const entry = getLevel(levelId);
-    const levelData = entry.load();
+    this.entry = getLevel(levelId);
+    const levelData = this.entry.load();
 
     this.bus = new EventBus();
     this.level = buildLevel(this, levelData);
     this.nav = new NavSystem(this.level.grid);
     this.noise = new NoiseSystem(this.bus);
+    this.run = new RunState(levelData);
     this.drawZones();
 
     const spawn = levelData.playerSpawn;
@@ -62,22 +72,31 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.enemies, this.level.walls);
     this.physics.add.collider(this.enemies, this.enemies);
 
+    this.poop = new PoopSystem(this, levelData.poopSpots, this.noise);
+    this.poop.onCompleted = (p) => this.onPoopCompleted(p);
+
     this.detection = new DetectionSystem(this.level.grid, () => this.enemies);
     this.cones = new VisionConeRenderer(this, this.level.grid, () => this.enemies);
     this.debug = new DebugOverlay(this, this.flags, this.level.grid, () => this.enemies, this.noise);
 
     this.inputManager = new InputManager();
     this.inputManager.addSource(new KeyboardSource(this));
-    this.scene.launch(SCENES.HUD, { input: this.inputManager, levelName: entry.name, bus: this.bus });
+    this.scene.launch(SCENES.HUD, { input: this.inputManager, levelName: this.entry.name, bus: this.bus, run: this.run });
 
     setupCamera(this, this.player, this.level.worldWidth, this.level.worldHeight);
 
-    this.bus.on('player:caught', () => this.onCaught());
+    this.bus.on('player:caught', () => this.lose('caught'));
+    this.bus.on('ui:pause', () => this.pause());
+    this.bus.on('enemy:mode', ({ from, to }) => {
+      if (to === 'suspicious' && (from === 'patrol' || from === 'return')) this.run.timesSuspicious += 1;
+      if (to === 'chase') this.run.timesAlerted += 1;
+    });
     this.input.keyboard?.on('keydown-R', () => this.scene.restart());
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scene.stop(SCENES.HUD);
       this.inputManager.destroy();
+      this.poop.destroy();
       this.bus.destroy();
       this.enemies = [];
     });
@@ -87,22 +106,68 @@ export class GameScene extends Phaser.Scene {
     const { poopSpots, exit } = this.level.data;
     const rect = (r: Rect, key: string) => this.add.tileSprite(r.x + r.w / 2, r.y + r.h / 2, r.w, r.h, key).setDepth(DEPTH.SPOTS);
     for (const s of poopSpots) rect(s.rect, s.cover === 'hidden' ? TEX.SPOT_HIDDEN : TEX.SPOT_EXPOSED);
-    if (exit) rect(exit, TEX.EXIT);
+    if (exit) this.exitSprite = rect(exit, TEX.EXIT).setAlpha(0.35);
   }
 
-  private onCaught(): void {
-    if (this.ended || this.flags.god) return;
+  private onPoopCompleted(poop: Poop): void {
+    this.run.onPoopCompleted();
+    this.bus.emit('poop:completed', { total: this.run.poopsCompleted });
+    this.cameras.main.flash(200, 126, 231, 135, false);
+    this.physics.add.overlap(this.enemies, poop, (obj) => {
+      const enemy = obj as Enemy;
+      if (!enemy.stunned) {
+        enemy.slip(BALANCE.enemy.slipSeconds);
+        this.noise.emit({ pos: enemy.pos, radius: 60, loudness: 0.4, kind: 'bump', sourceId: enemy.id });
+      }
+    });
+  }
+
+  private pause(): void {
+    if (this.ended || this.scene.isPaused()) return;
+    this.scene.launch(SCENES.PAUSE);
+    this.scene.pause(SCENES.HUD);
+    this.scene.pause();
+  }
+
+  private lose(reason: 'caught' | 'accident'): void {
+    if (this.ended || (reason === 'caught' && this.flags.god)) return;
     this.ended = true;
     this.player.frozen = true;
-    this.cameras.main.shake(250, 0.01);
-    this.cameras.main.flash(300, 255, 60, 60);
-    this.bus.emit('level:lost', { reason: 'caught' });
-    this.time.delayedCall(1200, () => this.scene.restart());
+    this.bus.emit('level:lost', { reason });
+    if (reason === 'caught') {
+      this.cameras.main.shake(250, 0.01);
+      this.cameras.main.flash(300, 255, 60, 60);
+    } else {
+      this.cameras.main.flash(500, 122, 74, 29);
+    }
+    this.finish({ outcome: 'lose', reason });
+  }
+
+  private win(): void {
+    if (this.ended) return;
+    this.ended = true;
+    this.player.frozen = true;
+    this.bus.emit('level:won', {});
+    this.cameras.main.flash(400, 126, 231, 135);
+    this.finish({ outcome: 'win' });
+  }
+
+  private finish(result: Pick<ResultSceneData, 'outcome' | 'reason'>): void {
+    const data: ResultSceneData = { ...result, levelId: this.entry.id, levelName: this.entry.name, stats: this.run.stats() };
+    this.time.delayedCall(1000, () => {
+      this.scene.stop(SCENES.HUD);
+      this.scene.start(SCENES.RESULT, data);
+    });
   }
 
   override update(_time: number, deltaMs: number): void {
     const dt = Math.min(deltaMs, 50) / 1000;
     const intent = this.inputManager.update();
+    if (intent.pausePressed) {
+      this.pause();
+      return;
+    }
+    if (!this.ended) this.poop.update(dt, intent, this.player, this.enemies);
     this.player.update(intent, dt);
 
     const snapshot: PlayerSnapshot = {
@@ -117,6 +182,12 @@ export class GameScene extends Phaser.Scene {
     this.cones.update(dt);
     this.debug.update();
 
-    if (intent.pausePressed) this.scene.start(SCENES.MAIN_MENU); // temporary until PauseScene (M3)
+    if (!this.ended) {
+      this.run.poopProgress = this.poop.state.progress;
+      const outcome = this.run.tick(dt, this.player.stance === 'run' && this.player.speed > 1, this.player.x, this.player.y);
+      if (this.exitSprite) this.exitSprite.setAlpha(this.run.objectives.exitOpen ? 1 : 0.35);
+      if (outcome === 'won') this.win();
+      else if (outcome === 'accident') this.lose('accident');
+    }
   }
 }

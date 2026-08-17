@@ -11,6 +11,8 @@ export interface GameEvents {
   noise: NoiseEvent;
   'level:won': Record<string, never>;
   'level:lost': { reason: 'caught' | 'accident' };
+  'poop:completed': { total: number };
+  'ui:pause': Record<string, never>;
 }
 
 /** Typed wrapper over Phaser's EventEmitter, one instance per level run (created by GameScene). */
