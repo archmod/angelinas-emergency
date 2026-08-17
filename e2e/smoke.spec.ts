@@ -2,7 +2,13 @@ import { expect, test, type Page } from '@playwright/test';
 
 declare global {
   interface Window {
-    __game?: { scene: { isActive(key: string): boolean }; renderer: { type: number }; isPaused: boolean };
+    __game?: {
+      scene: { isActive(key: string): boolean };
+      renderer: { type: number };
+      isPaused: boolean;
+      pause(): void;
+      resume(): void;
+    };
   }
 }
 
@@ -44,6 +50,40 @@ test('boots to the main menu, starts the game on tap, no console errors', async 
   await canvas.click({ position: { x: box!.width / 2, y: box!.height * 0.58 } });
   await waitForScene(page, 'Game');
 
+  expect(errors, errors.join('\n')).toEqual([]);
+});
+
+// Regression: on iOS the layout viewport can change with no `resize` event / stale sizes, and the ScaleManager's
+// parent-size poll stops while the rotate overlay pauses the game — so the home-screen app (always launched in
+// portrait, then rotated) kept a canvas fitted to the portrait size, about half the screen. The canvas must follow
+// its parent's size even while paused and without any window resize, and stay centered inside it.
+test('canvas re-fits to its parent while paused and without a window resize event', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/');
+  const canvas = page.locator('#game canvas');
+  await waitForScene(page, 'MainMenu');
+  const before = (await canvas.boundingBox())!;
+
+  const width = async () => (await canvas.boundingBox())!.width;
+  await page.evaluate(() => {
+    window.__game!.pause();
+    // Shrink the scale parent directly (no window resize fires), like iOS applying the new layout viewport late.
+    document.getElementById('game')!.style.inset = '0 40% 0 0';
+  });
+  await expect.poll(width, { timeout: 3000 }).toBeLessThan(before.width * 0.75);
+  const parent = (await page.locator('#game').boundingBox())!;
+  const shrunk = (await canvas.boundingBox())!;
+  expect(shrunk.width / shrunk.height).toBeCloseTo(16 / 9, 1);
+  expect(shrunk.width).toBeLessThanOrEqual(parent.width + 1);
+  expect(shrunk.height).toBeLessThanOrEqual(parent.height + 1);
+  expect(Math.abs(shrunk.x + shrunk.width / 2 - (parent.x + parent.width / 2))).toBeLessThanOrEqual(2);
+  expect(Math.abs(shrunk.y + shrunk.height / 2 - (parent.y + parent.height / 2))).toBeLessThanOrEqual(2);
+
+  await page.evaluate(() => {
+    document.getElementById('game')!.style.inset = '';
+  });
+  await expect.poll(width, { timeout: 3000 }).toBeGreaterThan(before.width - 2);
+  await page.evaluate(() => window.__game!.resume());
   expect(errors, errors.join('\n')).toEqual([]);
 });
 

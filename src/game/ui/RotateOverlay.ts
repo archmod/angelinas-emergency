@@ -23,8 +23,8 @@ export function setupRotateOverlay(game: Phaser.Game): void {
       game.resume();
       pausedByOverlay = false;
     }
-    // iOS reports stale sizes right after rotating; ask the ScaleManager to re-measure shortly after.
-    window.setTimeout(() => game.scale.refresh(), 250);
+    // Canvas re-fitting after the rotation is handled by systems/ViewportFit.ts (a bare `scale.refresh()` here
+    // reused the stale parent size and could leave the canvas at its portrait size).
   };
 
   portraitTouch.addEventListener('change', apply);

@@ -21,13 +21,12 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Phaser.Scale.FIT measures this parent; it must have a real size. Safe-area padding keeps the canvas
-   out from under the notch / home indicator when the page is not letterboxed. */
+/* Phaser.Scale.FIT measures this parent's border box, so the safe-area insets are applied as offsets (padding
+   would be measured too and only shift the canvas off-center): the canvas is fitted and centered inside the area
+   clear of the notch / home indicator. */
 #game {
   position: absolute;
-  inset: 0;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  box-sizing: border-box;
+  inset: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
 }
 
 #game canvas {

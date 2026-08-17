@@ -44,6 +44,10 @@ Full design/milestone plan: `~/.claude/plans/wise-dancing-walrus.md` (M0 scaffol
 - Phaser tests Container hit areas in origin-normalized space (adds `displayOriginX/Y` = w/2,h/2 after `setSize`): a Container's
   hit `Rectangle` must start at (0,0), not (-w/2,-h/2) — see `src/game/ui/Button.ts`. Verify tap targets with off-center taps, not center clicks.
 - Guards for scroll/zoom live in `src/styles.css` + `src/platform/ios.ts`; audio must start after a user gesture (menu "tap to start").
+- Canvas fitting is owned by `src/game/systems/ViewportFit.ts` (ResizeObserver on `#game` + re-checks after rotation). Never call
+  `game.scale.refresh()` on its own — it reuses the *previous* parent measurement; use `refitCanvas(game)` (`getParentBounds()` first).
+  The ScaleManager's own 500 ms parent poll stops while `game.pause()`d (rotate overlay). Safe-area insets are `#game`'s offsets,
+  not padding (Phaser measures the border box). Home-screen (standalone) launches are always portrait → rotate → must re-fit.
 - HTTPS-only features (service worker, wake lock) are verified on the deployed GitHub Pages URL.
 - Headless Chromium renders WebGL with SwiftShader, which randomly drops wedges out of rotated/tweened sprites in
   screenshots (not a game bug). For visual checks use headed Chromium on the GPU:

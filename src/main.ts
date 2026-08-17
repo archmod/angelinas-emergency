@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import './styles.css';
 import { gameConfig } from '@/config/game';
+import { keepCanvasFitted } from '@/game/systems/ViewportFit';
 import { setupRotateOverlay } from '@/game/ui/RotateOverlay';
 import { maybeShowInstallHint } from '@/platform/installHint';
 import { installBrowserGuards, installWakeLock } from '@/platform/ios';
@@ -10,6 +11,7 @@ installBrowserGuards();
 installWakeLock();
 
 const game = new Phaser.Game(gameConfig);
+keepCanvasFitted(game);
 setupRotateOverlay(game);
 
 // Expose the game for browser smoke tests and on-device debugging (dev builds or ?debug=1).
