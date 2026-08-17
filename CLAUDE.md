@@ -15,7 +15,8 @@ Full design/milestone plan: `~/.claude/plans/wise-dancing-walrus.md` (M0 scaffol
 - `npm run dev` — Vite dev server on LAN (`--host`); open `http://<lan-ip>:5173` on the phone. Add `?debug=1` for the eruda on-device console.
 - `npm test` / `npm run test:watch` — Vitest (core logic). `npm run test:e2e` — Playwright boot smoke test.
 - `npm run typecheck`, `npm run lint`, `npm run build`, `npm run preview`.
-- `npm run gen:icons` — regenerate placeholder PWA icons (`scripts/gen-icons.mjs`, pngjs).
+- `npm run gen:icons` — regenerate the PWA/apple-touch icons (`scripts/gen-icons.mjs`: esbuild-bundles `src/game/art/icon.ts` → `drawAppIcon`
+  (Angelina portrait + poop mascot on the menu backdrop) and rasterises it in headless Chromium via Playwright). Re-run after changing her look.
 
 ## Architecture rules
 - `src/core/**` is **Phaser-free** (enforced by ESLint `no-restricted-imports`): level schema/loaders, grid raycast/A*,

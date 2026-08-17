@@ -3,7 +3,7 @@ import { ENEMY_DEFS } from '@/config/enemies';
 import { TILE_KIND_COUNT, TILE_SIZE } from '@/config/tiles';
 import { MENU_ART, SPOT_DONE_SIZE, SPOT_PIN_H, SPOT_PIN_W, SPOT_TEXTURE_SIZE, TEX, enemyTexture, walkAnim } from './AssetKeys';
 import { circle, rng, type Ctx } from './canvas';
-import { drawAngelina, drawCamera, drawDog, drawFootprint, drawFrogFoot, drawJoshau, drawPerson, drawPoop, drawPuff, drawSpot, drawSpotDone, drawSpotPin, drawStink, FRAME, WALK_FRAMES, type PersonLook } from './sprites';
+import { drawAngelina, drawCamera, drawDog, drawFootprint, drawFrogFoot, drawJoshau, drawMenuBackdrop, drawPerson, drawPoop, drawPuff, drawSpot, drawSpotDone, drawSpotPin, drawStink, FRAME, WALK_FRAMES, type PersonLook } from './sprites';
 import { getMaterialCanvases } from './ground';
 import { drawTileset } from './tiles';
 
@@ -72,26 +72,7 @@ export function generateArtTextures(scene: Phaser.Scene): void {
 /** Menu/level-select dressing: chocolate backdrop, faint poop+footprint pattern, big frog feet, poop mascot. */
 function generateMenuArt(scene: Phaser.Scene): void {
   const M = MENU_ART;
-  // Backdrop: vertical chocolate gradient + warm glow near the top-centre + dark vignette. Low-res, stretched to fill.
-  canvasTexture(scene, TEX.MENU_BACKDROP, M.BACKDROP_W, M.BACKDROP_H, (ctx) => {
-    const w = M.BACKDROP_W;
-    const h = M.BACKDROP_H;
-    const g = ctx.createLinearGradient(0, 0, 0, h);
-    g.addColorStop(0, '#3d2515');
-    g.addColorStop(1, '#1e110a');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, w, h);
-    const glow = ctx.createRadialGradient(w * 0.5, h * 0.3, 0, w * 0.5, h * 0.3, w * 0.55);
-    glow.addColorStop(0, 'rgba(255, 205, 140, 0.16)');
-    glow.addColorStop(1, 'rgba(255, 205, 140, 0)');
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, w, h);
-    const vig = ctx.createRadialGradient(w * 0.5, h * 0.5, h * 0.45, w * 0.5, h * 0.5, w * 0.75);
-    vig.addColorStop(0, 'rgba(0,0,0,0)');
-    vig.addColorStop(1, 'rgba(0,0,0,0.5)');
-    ctx.fillStyle = vig;
-    ctx.fillRect(0, 0, w, h);
-  });
+  canvasTexture(scene, TEX.MENU_BACKDROP, M.BACKDROP_W, M.BACKDROP_H, (ctx) => drawMenuBackdrop(ctx, M.BACKDROP_W, M.BACKDROP_H));
 
   // Seamless tile of faint little poops and footprints (each stamp is also drawn at the wrapped offsets).
   canvasTexture(scene, TEX.MENU_PATTERN, M.PATTERN, M.PATTERN, (ctx) => {

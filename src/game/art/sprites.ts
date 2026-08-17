@@ -13,10 +13,10 @@ function shadow(ctx: Ctx, cx: number, cy: number, rx = 26, ry = 28): void {
   ellipse(ctx, cx - 1, cy + 2, rx, ry, 'rgba(0,0,0,0.16)');
 }
 
-function eye(ctx: Ctx, x: number, y: number, r: number, outline: string, lookX = 1.5): void {
-  circle(ctx, x, y, r, '#ffffff', { stroke: outline, lineWidth: 1.8 });
-  circle(ctx, x + lookX, y, r * 0.5, '#151515');
-  circle(ctx, x + lookX + r * 0.15, y - r * 0.2, r * 0.16, '#ffffff');
+function eye(ctx: Ctx, x: number, y: number, r: number, outline: string, lookX = 1.5, lookY = 0, lineWidth = 1.8): void {
+  circle(ctx, x, y, r, '#ffffff', { stroke: outline, lineWidth });
+  circle(ctx, x + lookX, y + lookY, r * 0.5, '#151515');
+  circle(ctx, x + lookX + r * 0.15, y + lookY - r * 0.2, r * 0.16, '#ffffff');
 }
 
 /**
@@ -491,6 +491,126 @@ export function drawFrogFoot(ctx: Ctx, ox: number, oy: number, w: number, h: num
     circle(ctx, sx + 4 * k, sy + 24 * k, 4 * k, brown, { stroke: '#3f2412', lineWidth: 2 * k });
     ellipse(ctx, sx - 8 * k, sy - 5 * k, 6 * k, 3 * k, 'rgba(255,255,255,0.28)', { rotation: -0.5 });
   }
+}
+
+/**
+ * Angelina, front view (bust) for the app icon / title art: the same look as the top-down sprite — green frog skin,
+ * brown Dora bob with zig-zag bangs, huge bulging frog eyes, wide smile, pink shirt with purple backpack straps.
+ * Fills a w×h box (200×220 proportions; head centred at 50% width, 44% height). The torso runs off the bottom of the
+ * box on purpose so the bust can be cropped by the icon edge / mask. `lookX`/`lookY` nudge the pupils (box units).
+ */
+export function drawAngelinaPortrait(ctx: Ctx, ox: number, oy: number, w: number, h: number, opts: { lookX?: number; lookY?: number } = {}): void {
+  const k = Math.min(w / 200, h / 220);
+  const cx = ox + w / 2;
+  const hy = oy + 96 * k;
+  const skin = '#7ed957';
+  const skinDark = '#2f6b1f';
+  const hair = '#5a3a22';
+  const hairOutline = tint(hair, 0.6);
+  const shirt = '#ff5fa2';
+  const R = 62 * k; // head radius
+  const lookX = (opts.lookX ?? 4) * k;
+  const lookY = (opts.lookY ?? 2) * k;
+
+  // backpack (purple) peeking over both shoulders, behind everything
+  for (const side of [-1, 1]) {
+    roundRect(ctx, cx + side * 66 * k - 22 * k, oy + 156 * k, 44 * k, 70 * k, 14 * k, shade(ctx, cx + side * 66 * k, oy + 170 * k, 40 * k, '#a86cf0', '#6f3bbf'), { stroke: '#4a2585', lineWidth: 3 * k });
+  }
+  // bob: rounded top, sides hanging past the jaw and curling in under the chin
+  ctx.beginPath();
+  ctx.moveTo(cx - 78 * k, hy + 34 * k);
+  ctx.lineTo(cx - 78 * k, hy - 2 * k);
+  ctx.arc(cx, hy - 2 * k, 78 * k, Math.PI, 0);
+  ctx.lineTo(cx + 78 * k, hy + 34 * k);
+  ctx.quadraticCurveTo(cx + 78 * k, hy + 80 * k, cx + 50 * k, hy + 74 * k);
+  ctx.quadraticCurveTo(cx + 34 * k, hy + 70 * k, cx + 36 * k, hy + 40 * k);
+  ctx.lineTo(cx - 36 * k, hy + 40 * k);
+  ctx.quadraticCurveTo(cx - 34 * k, hy + 70 * k, cx - 50 * k, hy + 74 * k);
+  ctx.quadraticCurveTo(cx - 78 * k, hy + 80 * k, cx - 78 * k, hy + 34 * k);
+  ctx.closePath();
+  ctx.fillStyle = shade(ctx, cx - 10 * k, hy - 20 * k, 90 * k, '#7a4f2e', hair);
+  ctx.fill();
+  ctx.lineWidth = 3 * k;
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = hairOutline;
+  ctx.stroke();
+  // neck
+  roundRect(ctx, cx - 18 * k, hy + 40 * k, 36 * k, 60 * k, 10 * k, tint(skin, 0.9), { stroke: skinDark, lineWidth: 3 * k });
+  // pink shirt: shoulders + torso running off the bottom of the box
+  ctx.beginPath();
+  ctx.moveTo(cx - 96 * k, oy + 420 * k);
+  ctx.lineTo(cx - 96 * k, oy + 226 * k);
+  ctx.ellipse(cx, oy + 226 * k, 96 * k, 54 * k, 0, Math.PI, 0);
+  ctx.lineTo(cx + 96 * k, oy + 420 * k);
+  ctx.closePath();
+  ctx.fillStyle = shade(ctx, cx - 10 * k, oy + 200 * k, 110 * k, '#ff8ec2', shirt);
+  ctx.fill();
+  ctx.lineWidth = 3 * k;
+  ctx.strokeStyle = OUTLINE;
+  ctx.stroke();
+  // collar
+  arc(ctx, cx, oy + 178 * k, 24 * k, Math.PI * 0.1, Math.PI * 0.9, tint(shirt, 0.75), 3 * k);
+  // backpack straps over the shoulders
+  line(ctx, cx - 40 * k, oy + 180 * k, cx - 30 * k, oy + 240 * k, '#5c2f9a', 13 * k, 'butt');
+  line(ctx, cx + 40 * k, oy + 180 * k, cx + 30 * k, oy + 240 * k, '#5c2f9a', 13 * k, 'butt');
+  // head
+  circle(ctx, cx, hy, R, shade(ctx, cx, hy, R, '#9ce67a', skin), { stroke: skinDark, lineWidth: 3.5 * k });
+  // bangs: hair over the top of the face with a zig-zag edge (clipped to the head)
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, hy, R + 2 * k, 0, Math.PI * 2);
+  ctx.clip();
+  const zig: Array<[number, number]> = [];
+  for (let i = 0; i <= 10; i++) zig.push([cx + 70 * k - i * 14 * k - 7 * k, hy - (i % 2 === 0 ? 46 : 36) * k]);
+  ctx.beginPath();
+  ctx.moveTo(cx - 70 * k, hy - 100 * k);
+  ctx.lineTo(cx + 70 * k, hy - 100 * k);
+  ctx.lineTo(cx + 70 * k, hy - 36 * k);
+  for (const [x, y] of zig) ctx.lineTo(x, y);
+  ctx.lineTo(cx - 70 * k, hy - 36 * k);
+  ctx.closePath();
+  ctx.fillStyle = shade(ctx, cx - 10 * k, hy - 60 * k, 70 * k, '#7a4f2e', hair);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx + 70 * k, hy - 36 * k);
+  for (const [x, y] of zig) ctx.lineTo(x, y);
+  ctx.lineTo(cx - 70 * k, hy - 36 * k);
+  ctx.lineWidth = 2.5 * k;
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = hairOutline;
+  ctx.stroke();
+  ctx.restore();
+  // face: nostrils, wide frog smile, blush
+  circle(ctx, cx - 6 * k, hy + 19 * k, 2.2 * k, skinDark);
+  circle(ctx, cx + 6 * k, hy + 19 * k, 2.2 * k, skinDark);
+  arc(ctx, cx, hy + 16 * k, 37 * k, Math.PI * 0.12, Math.PI * 0.88, skinDark, 4 * k);
+  ellipse(ctx, cx - 48 * k, hy + 32 * k, 10 * k, 6 * k, 'rgba(255,120,150,0.45)');
+  ellipse(ctx, cx + 48 * k, hy + 32 * k, 10 * k, 6 * k, 'rgba(255,120,150,0.45)');
+  // huge bulging frog eyes, high on the face, tops tucked under the bangs
+  eye(ctx, cx - 33 * k, hy - 14 * k, 27 * k, skinDark, lookX, lookY, 3 * k);
+  eye(ctx, cx + 33 * k, hy - 14 * k, 27 * k, skinDark, lookX, lookY, 3 * k);
+}
+
+/**
+ * Menu backdrop: vertical chocolate gradient + warm glow near the top-centre + dark vignette. Drawn low-res for the
+ * menus (stretched to fill) and full-res for the app icon.
+ */
+export function drawMenuBackdrop(ctx: Ctx, w: number, h: number): void {
+  const g = ctx.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, '#3d2515');
+  g.addColorStop(1, '#1e110a');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w, h);
+  const glow = ctx.createRadialGradient(w * 0.5, h * 0.3, 0, w * 0.5, h * 0.3, w * 0.55);
+  glow.addColorStop(0, 'rgba(255, 205, 140, 0.16)');
+  glow.addColorStop(1, 'rgba(255, 205, 140, 0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, w, h);
+  const vig = ctx.createRadialGradient(w * 0.5, h * 0.5, h * 0.45, w * 0.5, h * 0.5, w * 0.75);
+  vig.addColorStop(0, 'rgba(0,0,0,0)');
+  vig.addColorStop(1, 'rgba(0,0,0,0.5)');
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, w, h);
 }
 
 /**
