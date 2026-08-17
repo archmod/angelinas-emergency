@@ -4,6 +4,7 @@ import { TILE_KIND_COUNT, TILE_SIZE } from '@/config/tiles';
 import { MENU_ART, SPOT_TEXTURE_SIZE, TEX, enemyTexture, walkAnim } from './AssetKeys';
 import { circle, rng, type Ctx } from './canvas';
 import { drawAngelina, drawCamera, drawDog, drawFootprint, drawFrogFoot, drawJoshau, drawPerson, drawPoop, drawSpot, drawStink, FRAME, WALK_FRAMES, type PersonLook } from './sprites';
+import { getMaterialCanvases } from './ground';
 import { drawTileset } from './tiles';
 
 /** Distinct looks per enemy archetype (see config/enemies.ts). */
@@ -28,6 +29,8 @@ export function generateArtTextures(scene: Phaser.Scene): void {
   if (scene.textures.exists(TEX.TILESET)) return; // already generated (scene restart)
 
   canvasTexture(scene, TEX.TILESET, TILE_KIND_COUNT * TILE_SIZE, TILE_SIZE, drawTileset);
+  getMaterialCanvases(); // seamless ground materials, painted per level by LevelLoader
+
 
   // Characters: horizontal strips of WALK_FRAMES frames.
   strip(scene, TEX.PLAYER, (ctx, i) => drawAngelina(ctx, i * FRAME, 0, i));

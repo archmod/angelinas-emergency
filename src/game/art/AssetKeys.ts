@@ -21,6 +21,8 @@ export const TEX = {
 } as const;
 export type TextureKey = (typeof TEX)[keyof typeof TEX];
 
+/** Texture key of a level's painted ground backdrop (see art/ground.ts). */
+export const groundTexture = (levelId: string): string => `ground-${levelId}`;
 /** Texture key for an enemy archetype's sprite strip. */
 export const enemyTexture = (kind: string): string => `enemy-${kind}`;
 /** Animation key for a character strip's walk cycle. */

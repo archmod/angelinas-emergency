@@ -8,13 +8,13 @@ import { fileURLToPath } from 'node:url';
 
 const T = 32;
 const TILES = [
-  { name: 'grass', color: 0x4a8f4f, collides: false, occludes: false, hides: false },
-  { name: 'path', color: 0xb9a886, collides: false, occludes: false, hides: false },
-  { name: 'floor', color: 0xd2c8b6, collides: false, occludes: false, hides: false },
+  { name: 'grass', color: 0x566d3e, collides: false, occludes: false, hides: false },
+  { name: 'path', color: 0x8c8266, collides: false, occludes: false, hides: false },
+  { name: 'floor', color: 0xa29a87, collides: false, occludes: false, hides: false },
   { name: 'wall', color: 0x4b4f5c, collides: true, occludes: true, hides: false },
   { name: 'fence', color: 0x8b6b3d, collides: true, occludes: false, hides: false },
   { name: 'bush', color: 0x2f6b39, collides: false, occludes: true, hides: true },
-  { name: 'water', color: 0x3a6ea5, collides: true, occludes: false, hides: false },
+  { name: 'water', color: 0x34576a, collides: true, occludes: false, hides: false },
   { name: 'tree', color: 0x245c2c, collides: true, occludes: true, hides: false },
   { name: 'locker', color: 0x6b7a8f, collides: false, occludes: true, hides: true },
 ];

@@ -33,18 +33,18 @@ export interface TileDef {
   flags: TileFlags;
   /** Which layer the tile is drawn on. */
   layer: 'ground' | 'walls' | 'cover';
-  /** Placeholder color (RGB hex). */
+  /** Placeholder / swatch color (RGB hex); ground kinds & water are painted per level by game/art/ground.ts. */
   color: number;
 }
 
 export const TILE_DEFS: Record<TileKindId, TileDef> = {
-  [TileKind.GRASS]: { kind: TileKind.GRASS, label: 'grass', flags: TileFlag.NONE, layer: 'ground', color: 0x4a8f4f },
-  [TileKind.PATH]: { kind: TileKind.PATH, label: 'path', flags: TileFlag.NONE, layer: 'ground', color: 0xb9a886 },
-  [TileKind.FLOOR]: { kind: TileKind.FLOOR, label: 'floor', flags: TileFlag.NONE, layer: 'ground', color: 0xd2c8b6 },
+  [TileKind.GRASS]: { kind: TileKind.GRASS, label: 'grass', flags: TileFlag.NONE, layer: 'ground', color: 0x566d3e },
+  [TileKind.PATH]: { kind: TileKind.PATH, label: 'path', flags: TileFlag.NONE, layer: 'ground', color: 0x8c8266 },
+  [TileKind.FLOOR]: { kind: TileKind.FLOOR, label: 'floor', flags: TileFlag.NONE, layer: 'ground', color: 0xa29a87 },
   [TileKind.WALL]: { kind: TileKind.WALL, label: 'wall', flags: TileFlag.SOLID | TileFlag.OCCLUDE, layer: 'walls', color: 0x4b4f5c },
   [TileKind.FENCE]: { kind: TileKind.FENCE, label: 'fence', flags: TileFlag.SOLID, layer: 'walls', color: 0x8b6b3d },
   [TileKind.BUSH]: { kind: TileKind.BUSH, label: 'bush', flags: TileFlag.OCCLUDE | TileFlag.HIDE, layer: 'cover', color: 0x2f6b39 },
-  [TileKind.WATER]: { kind: TileKind.WATER, label: 'water', flags: TileFlag.SOLID, layer: 'walls', color: 0x3a6ea5 },
+  [TileKind.WATER]: { kind: TileKind.WATER, label: 'water', flags: TileFlag.SOLID, layer: 'walls', color: 0x34576a },
   [TileKind.TREE]: { kind: TileKind.TREE, label: 'tree', flags: TileFlag.SOLID | TileFlag.OCCLUDE, layer: 'walls', color: 0x245c2c },
   [TileKind.LOCKER]: { kind: TileKind.LOCKER, label: 'locker', flags: TileFlag.OCCLUDE | TileFlag.HIDE, layer: 'cover', color: 0x6b7a8f },
 };

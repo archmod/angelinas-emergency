@@ -24,6 +24,11 @@ Full design/milestone plan: `~/.claude/plans/wise-dancing-walrus.md` (M0 scaffol
 - Scene keys/depths/registry keys live in `src/config/constants.ts`; ALL gameplay tunables go in `src/config/balance.ts`.
 - Logical resolution 1280×720, `Scale.FIT` + `CENTER_BOTH`, landscape only (DOM rotate overlay in portrait).
 - Entities reference art only through `src/game/art/AssetKeys.ts` ids so placeholder shapes can be swapped for sprites.
+- Ground is painted, not tiled (Binding-of-Isaac style): `src/game/art/ground.ts` builds seamless muted material textures
+  (grass/path/floor/water) once, then `LevelLoader.buildLevel` paints one backdrop canvas per level (`groundTexture(levelId)`):
+  pattern fills → brush-dab borders between materials → masked water with shore shadow + foam rim → wall AO → vignette.
+  Look tunables are `GROUND_LOOK`/`PALETTE` there. Water stays a *transparent* SOLID tile on the walls layer for collision;
+  object tiles (fence/bush/tree/locker) have transparent backgrounds so the painted ground shows through.
 - Levels: internal `LevelData` schema; authored as ASCII (`src/levels/ascii/*.ts`, registered in `src/levels/registry.ts`,
   validated by `src/levels/levels.test.ts`); Tiled `.tmj` loader in `src/core/level/parseTiled.ts` (register with `tiled(meta, url)`).
 - Enemy archetypes are data in `src/config/enemies.ts`; the pure FSM is `src/core/ai/enemyBrain.ts` (commands applied by `src/game/entities/Enemy.ts`).
