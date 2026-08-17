@@ -1,54 +1,67 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH, SCENES } from '@/config/constants';
-import { THEME, textStyle } from '@/game/ui/theme';
+import { DEPTH, REGISTRY, SCENES } from '@/config/constants';
+import type { Rect } from '@/core/level/schema';
+import { TEX } from '@/game/art/AssetKeys';
+import { Player } from '@/game/entities/Player';
+import { InputManager } from '@/game/input/InputManager';
+import { KeyboardSource } from '@/game/input/KeyboardSource';
+import { setupCamera } from '@/game/systems/CameraRig';
+import { buildLevel, type BuiltLevel } from '@/game/systems/LevelLoader';
+import { DEFAULT_LEVEL_ID, getLevel } from '@/levels/registry';
 
-/**
- * M0 smoke-test scene: proves rendering, the game loop, multi-touch and keyboard input on the device.
- * Replaced by the real level scene in M1.
- */
+export interface GameSceneData {
+  levelId?: string;
+}
+
+/** The level scene: builds the map, owns the player, systems and per-frame update order. */
 export class GameScene extends Phaser.Scene {
-  private box!: Phaser.GameObjects.Rectangle;
-  private info!: Phaser.GameObjects.Text;
-  private taps = 0;
-  private vx = 220;
-  private vy = 160;
+  private level!: BuiltLevel;
+  private player!: Player;
+  private inputManager!: InputManager;
 
   constructor() {
     super(SCENES.GAME);
   }
 
-  create(): void {
-    this.cameras.main.setBackgroundColor(THEME.colors.bgHex);
-    this.add.grid(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 64, 64, 0x000000, 0, 0xffffff, 0.06);
+  create(data: GameSceneData): void {
+    const debug = this.registry.get(REGISTRY.DEBUG_FLAGS) as { level?: string | null } | undefined;
+    const levelId = data.levelId ?? debug?.level ?? DEFAULT_LEVEL_ID;
+    const entry = getLevel(levelId);
+    const levelData = entry.load();
 
-    this.box = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 80, 80, THEME.colors.accentHex);
-    this.info = this.add.text(16, 16, '', textStyle(20));
-    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 24, 'M0 smoke test — tap/click anywhere · Esc = menu', textStyle(18, THEME.colors.textDim)).setOrigin(0.5, 1);
+    this.level = buildLevel(this, levelData);
+    this.drawZones();
 
-    this.input.on(Phaser.Input.Events.POINTER_DOWN, (p: Phaser.Input.Pointer) => {
-      this.taps += 1;
-      const ring = this.add.circle(p.worldX, p.worldY, 10, THEME.colors.accentHex, 0.6);
-      this.tweens.add({ targets: ring, radius: 60, alpha: 0, duration: 400, onComplete: () => ring.destroy() });
+    const spawn = levelData.playerSpawn;
+    this.player = new Player(this, spawn.x, spawn.y, this.level.grid);
+    this.physics.add.collider(this.player, this.level.walls);
+
+    this.inputManager = new InputManager();
+    this.inputManager.addSource(new KeyboardSource(this));
+    this.scene.launch(SCENES.HUD, { input: this.inputManager, levelName: entry.name });
+
+    setupCamera(this, this.player, this.level.worldWidth, this.level.worldHeight);
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scene.stop(SCENES.HUD);
+      this.inputManager.destroy();
     });
-    this.input.keyboard?.on('keydown-ESC', () => this.scene.start(SCENES.MAIN_MENU));
+  }
+
+  private drawZones(): void {
+    const { poopSpots, exit } = this.level.data;
+    const rect = (r: Rect, key: string) =>
+      this.add
+        .tileSprite(r.x + r.w / 2, r.y + r.h / 2, r.w, r.h, key)
+        .setDepth(DEPTH.SPOTS);
+    for (const s of poopSpots) rect(s.rect, s.cover === 'hidden' ? TEX.SPOT_HIDDEN : TEX.SPOT_EXPOSED);
+    if (exit) rect(exit, TEX.EXIT);
   }
 
   override update(_time: number, deltaMs: number): void {
     const dt = Math.min(deltaMs, 50) / 1000;
-    this.box.x += this.vx * dt;
-    this.box.y += this.vy * dt;
-    if (this.box.x < 40 || this.box.x > GAME_WIDTH - 40) this.vx *= -1;
-    if (this.box.y < 40 || this.box.y > GAME_HEIGHT - 40) this.vy *= -1;
-
-    const active = this.input.manager.pointers.filter((p) => p.isDown).map((p) => `#${p.id}`);
-    this.info.setText(
-      [
-        `fps ${Math.round(this.game.loop.actualFps)}`,
-        `taps ${this.taps}`,
-        `pointers down: ${active.length ? active.join(' ') : '—'}`,
-        `renderer ${this.game.renderer.type === Phaser.WEBGL ? 'WebGL' : 'Canvas'}`,
-        `display ${this.scale.displaySize.width | 0}×${this.scale.displaySize.height | 0} @${window.devicePixelRatio}x`,
-      ].join('\n'),
-    );
+    const intent = this.inputManager.update();
+    this.player.update(intent, dt);
+    if (intent.pausePressed) this.scene.start(SCENES.MAIN_MENU); // temporary until PauseScene (M3)
   }
 }

@@ -4,6 +4,7 @@ import { BootScene } from '@/game/scenes/BootScene';
 import { PreloadScene } from '@/game/scenes/PreloadScene';
 import { MainMenuScene } from '@/game/scenes/MainMenuScene';
 import { GameScene } from '@/game/scenes/GameScene';
+import { HudScene } from '@/game/scenes/HudScene';
 
 /**
  * Phaser game configuration.
@@ -48,5 +49,5 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     powerPreference: 'high-performance',
   },
   fps: { target: 60, smoothStep: true },
-  scene: [BootScene, PreloadScene, MainMenuScene, GameScene],
+  scene: [BootScene, PreloadScene, MainMenuScene, GameScene, HudScene],
 };

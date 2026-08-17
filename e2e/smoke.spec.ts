@@ -46,3 +46,34 @@ test('boots to the main menu, starts the game on tap, no console errors', async 
 
   expect(errors, errors.join('\n')).toEqual([]);
 });
+
+test('keyboard moves Angelina and bushes hide her', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'keyboard-only');
+  const errors = collectErrors(page);
+  await page.goto('/');
+  await waitForScene(page, 'MainMenu');
+  await page.keyboard.press('Space');
+  await waitForScene(page, 'Game');
+
+  const pos = () =>
+    page.evaluate(() => {
+      const s = (window as unknown as { __game: { scene: { getScene(k: string): { player: { x: number; y: number; hidden: boolean } } } } }).__game.scene.getScene('Game');
+      return { x: s.player.x, y: s.player.y, hidden: s.player.hidden };
+    });
+  const start = await pos();
+  await page.keyboard.down('d');
+  await page.waitForTimeout(600);
+  await page.keyboard.up('d');
+  const moved = await pos();
+  expect(moved.x).toBeGreaterThan(start.x + 40);
+
+  // Test level: bush block at tiles (3..4, 2..3) → walk down into it.
+  await page.keyboard.down('s');
+  await page.waitForTimeout(450);
+  await page.keyboard.up('s');
+  await page.waitForTimeout(100);
+  const inBush = await pos();
+  expect(inBush.hidden).toBe(true);
+
+  expect(errors.filter((e) => !e.includes('GPU stall')), errors.join('\n')).toEqual([]);
+});
