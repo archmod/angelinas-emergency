@@ -1,0 +1,79 @@
+/* Global page styles: the page is a fixed, non-scrolling, non-zooming shell around the game canvas. */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #1b1b24;
+  color: #f4f1ea;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* iOS: stop rubber-band scrolling, pinch zoom, double-tap zoom, long-press callouts, text selection. */
+  overscroll-behavior: none;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Phaser.Scale.FIT measures this parent; it must have a real size. Safe-area padding keeps the canvas
+   out from under the notch / home indicator when the page is not letterboxed. */
+#game {
+  position: absolute;
+  inset: 0;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  box-sizing: border-box;
+}
+
+#game canvas {
+  display: block;
+  touch-action: none;
+  image-rendering: auto;
+}
+
+/* Rotate-your-device overlay: shown by JS (portrait + touch device); the media query is a no-JS fallback. */
+#rotate-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: #1b1b24;
+  text-align: center;
+}
+#rotate-overlay.visible {
+  display: flex;
+}
+@media (orientation: portrait) and (pointer: coarse) {
+  #rotate-overlay:not(.suppressed) {
+    display: flex;
+  }
+}
+.rotate-card {
+  padding: 24px 32px;
+  font-size: 18px;
+}
+.rotate-icon {
+  font-size: 64px;
+  display: inline-block;
+  animation: rotate-hint 2s ease-in-out infinite;
+}
+@keyframes rotate-hint {
+  0%,
+  20% {
+    transform: rotate(0deg);
+  }
+  50%,
+  70% {
+    transform: rotate(90deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}

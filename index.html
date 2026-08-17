@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <!-- iOS Safari ignores user-scalable=no; the real zoom/scroll prevention lives in styles.css + platform/ios.ts -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Angelina" />
+    <meta name="theme-color" content="#1b1b24" />
+    <meta name="description" content="Angelina's Emergency — a sneaky top-down stealth game. Find a spot, do the deed, don't get caught." />
+    <link rel="apple-touch-icon" href="%BASE_URL%icons/apple-touch-icon-180.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="%BASE_URL%icons/icon-192.png" />
+    <title>Angelina's Emergency</title>
+  </head>
+  <body>
+    <div id="game"></div>
+    <div id="rotate-overlay" role="dialog" aria-live="polite">
+      <div class="rotate-card">
+        <div class="rotate-icon" aria-hidden="true">📱</div>
+        <p>Please rotate your device to landscape</p>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
