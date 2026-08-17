@@ -336,3 +336,87 @@ export function drawSpot(ctx: Ctx, ox: number, oy: number, kind: 'hidden' | 'exp
     ctx.restore();
   }
 }
+
+/**
+ * Frog footprint silhouette (heel pad + three toes) pointing up (-y), single flat colour, in a w×h box.
+ * Used for the tiptoe trail on the menu and the faint background pattern; mirror with flipX for the other foot.
+ */
+export function drawFootprint(ctx: Ctx, ox: number, oy: number, w: number, h: number, fill: string): void {
+  const cx = ox + w / 2;
+  const k = Math.min(w / 64, h / 80);
+  ctx.save();
+  ctx.fillStyle = fill;
+  ctx.strokeStyle = fill;
+  ctx.lineCap = 'round';
+  // heel/sole pad
+  ellipse(ctx, cx, oy + h - 26 * k, 16 * k, 22 * k, fill);
+  // toes: tapered stalks from the sole ending in round pads
+  for (const [dx, dy, r] of [
+    [-21, 22, 8],
+    [0, 11, 9],
+    [21, 22, 8],
+  ] as const) {
+    line(ctx, cx + dx * 0.4 * k, oy + h - 40 * k, cx + dx * k, oy + dy * k + 4 * k, fill, 8 * k);
+    circle(ctx, cx + dx * k, oy + dy * k, r * k, fill);
+  }
+  ctx.restore();
+}
+
+/**
+ * Big cartoon frog foot seen from above, toes up (-y), in a w×h box (default 160×220 proportions):
+ * green skin with cartoon shading, webbing between the toes, dark outline. `smear` adds a bit of poop she stepped in.
+ */
+export function drawFrogFoot(ctx: Ctx, ox: number, oy: number, w: number, h: number, opts: { smear?: boolean } = {}): void {
+  const k = Math.min(w / 160, h / 220);
+  const cx = ox + w / 2;
+  const skin = '#7ed957';
+  const skinDark = '#2f6b1f';
+  const light = '#a8ef85';
+  const soleY = oy + h - 70 * k;
+  const toes: Array<[number, number, number]> = [
+    [-52, 62, 20], // [dx, padY (from top), pad radius]
+    [0, 26, 23],
+    [52, 62, 20],
+  ];
+  // webbing between the toes (drawn first, behind everything)
+  ctx.beginPath();
+  ctx.moveTo(cx - 40 * k, soleY);
+  for (const [dx, dy] of toes) ctx.lineTo(cx + dx * k, oy + dy * k + 8 * k);
+  ctx.lineTo(cx + 40 * k, soleY);
+  ctx.closePath();
+  ctx.fillStyle = shade(ctx, cx, soleY - 40 * k, 60 * k, light, skin);
+  ctx.fill();
+  ctx.lineWidth = 3 * k;
+  ctx.strokeStyle = skinDark;
+  ctx.stroke();
+  // toes: stalk + pad
+  for (const [dx, dy, r] of toes) {
+    ctx.beginPath();
+    ctx.moveTo(cx + dx * 0.35 * k, soleY);
+    ctx.lineTo(cx + dx * k, oy + dy * k);
+    ctx.lineWidth = 30 * k;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = skinDark;
+    ctx.stroke();
+    ctx.lineWidth = 24 * k;
+    ctx.strokeStyle = skin;
+    ctx.stroke();
+    circle(ctx, cx + dx * k, oy + dy * k, r * k, shade(ctx, cx + dx * k, oy + dy * k, r * k, light, skin), { stroke: skinDark, lineWidth: 3 * k });
+    // toe-pad shine
+    ellipse(ctx, cx + dx * k - r * 0.3 * k, oy + dy * k - r * 0.35 * k, r * 0.35 * k, r * 0.2 * k, 'rgba(255,255,255,0.35)', { rotation: -0.6 });
+  }
+  // sole (heel) — overlaps the toe stalks
+  ellipse(ctx, cx, soleY + 22 * k, 46 * k, 58 * k, shade(ctx, cx, soleY + 10 * k, 60 * k, light, skin), { stroke: skinDark, lineWidth: 3.5 * k });
+  ellipse(ctx, cx - 14 * k, soleY, 12 * k, 20 * k, 'rgba(255,255,255,0.22)', { rotation: 0.3 });
+  if (opts.smear) {
+    // stepped in it: a brown splat on the outer edge of the sole with a couple of drips
+    const sx = cx + 30 * k;
+    const sy = soleY - 26 * k;
+    const brown = shade(ctx, sx, sy, 24 * k, '#b8794a', '#6b3f1f');
+    ellipse(ctx, sx, sy, 24 * k, 15 * k, brown, { stroke: '#3f2412', lineWidth: 2.5 * k, rotation: -0.6 });
+    circle(ctx, sx + 16 * k, sy + 16 * k, 7 * k, brown, { stroke: '#3f2412', lineWidth: 2 * k });
+    circle(ctx, sx - 18 * k, sy + 14 * k, 5 * k, brown, { stroke: '#3f2412', lineWidth: 2 * k });
+    circle(ctx, sx + 4 * k, sy + 24 * k, 4 * k, brown, { stroke: '#3f2412', lineWidth: 2 * k });
+    ellipse(ctx, sx - 8 * k, sy - 5 * k, 6 * k, 3 * k, 'rgba(255,255,255,0.28)', { rotation: -0.5 });
+  }
+}

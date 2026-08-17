@@ -16,7 +16,7 @@ export class PreloadScene extends Phaser.Scene {
     const x = (GAME_WIDTH - w) / 2;
     const y = GAME_HEIGHT / 2;
     const track = this.add.rectangle(x, y, w, h, 0x000000, 0.35).setOrigin(0, 0.5);
-    const bar = this.add.rectangle(x + 2, y, 0, h - 4, THEME.colors.accentHex).setOrigin(0, 0.5);
+    const bar = this.add.rectangle(x + 2, y, 0, h - 4, THEME.colors.frog).setOrigin(0, 0.5);
     this.add.text(GAME_WIDTH / 2, y - 40, 'Loading…', textStyle(22, THEME.colors.textDim)).setOrigin(0.5);
 
     this.load.on(Phaser.Loader.Events.PROGRESS, (value: number) => {

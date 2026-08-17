@@ -21,7 +21,7 @@ Full design/milestone plan: `~/.claude/plans/wise-dancing-walrus.md` (M0 scaffol
 - `src/game/**` is the Phaser side: scenes, entities, systems, input sources, art registry, UI, debug.
 - Scene keys/depths/registry keys live in `src/config/constants.ts`; ALL gameplay tunables go in `src/config/balance.ts`.
 - Logical resolution 1280×720, `Scale.FIT` + `CENTER_BOTH`, landscape only (DOM rotate overlay in portrait).
-- Entities reference art only through `src/game/art/AssetRegistry.ts` ids so placeholder shapes can be swapped for sprites.
+- Entities reference art only through `src/game/art/AssetKeys.ts` ids so placeholder shapes can be swapped for sprites.
 - Levels: internal `LevelData` schema; authored as ASCII (`src/levels/ascii/*.ts`, registered in `src/levels/registry.ts`,
   validated by `src/levels/levels.test.ts`); Tiled `.tmj` loader in `src/core/level/parseTiled.ts` (register with `tiled(meta, url)`).
 - Enemy archetypes are data in `src/config/enemies.ts`; the pure FSM is `src/core/ai/enemyBrain.ts` (commands applied by `src/game/entities/Enemy.ts`).
@@ -43,3 +43,11 @@ Full design/milestone plan: `~/.claude/plans/wise-dancing-walrus.md` (M0 scaffol
   hit `Rectangle` must start at (0,0), not (-w/2,-h/2) — see `src/game/ui/Button.ts`. Verify tap targets with off-center taps, not center clicks.
 - Guards for scroll/zoom live in `src/styles.css` + `src/platform/ios.ts`; audio must start after a user gesture (menu "tap to start").
 - HTTPS-only features (service worker, wake lock) are verified on the deployed GitHub Pages URL.
+- Headless Chromium renders WebGL with SwiftShader, which randomly drops wedges out of rotated/tweened sprites in
+  screenshots (not a game bug). For visual checks use headed Chromium on the GPU:
+  `chromium.launch({ headless: false, args: ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] })`.
+
+## UI theme
+- Menus are poop + feet themed: palette/`headingStyle` in `src/game/ui/theme.ts`, chunky pill `Button` (opt-in `toes: true`
+  for the three-toed foot-pad look), `addMenuBackdrop()` (chocolate gradient + drifting poop/footprint pattern) for menu
+  screens, and menu textures (`TEX.MENU_*`, generated in `generate.ts` → `generateMenuArt`).

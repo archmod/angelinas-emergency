@@ -8,8 +8,8 @@ body {
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: #1b1b24;
-  color: #f4f1ea;
+  background: #2b1a10;
+  color: #fff1d6;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   /* iOS: stop rubber-band scrolling, pinch zoom, double-tap zoom, long-press callouts, text selection. */
@@ -44,7 +44,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #a9a6a0;
+  color: #c9a980;
   font-size: 20px;
 }
 #game:has(canvas)::before {
@@ -59,7 +59,7 @@ body {
   display: none;
   align-items: center;
   justify-content: center;
-  background: #1b1b24;
+  background: #2b1a10;
   text-align: center;
 }
 #rotate-overlay.visible {
@@ -106,8 +106,9 @@ body {
   max-width: 92vw;
   padding: 10px 14px;
   border-radius: 12px;
-  background: rgba(20, 20, 30, 0.92);
-  color: #f4f1ea;
+  background: rgba(43, 26, 16, 0.94);
+  color: #fff1d6;
+  border: 2px solid #a0673a;
   font-size: 14px;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
   touch-action: manipulation;
@@ -116,8 +117,8 @@ body {
   border: 0;
   border-radius: 8px;
   padding: 8px 12px;
-  background: #ff7ab6;
-  color: #1b1b24;
+  background: #7ed957;
+  color: #2b1a10;
   font-weight: 700;
   font-size: 14px;
 }

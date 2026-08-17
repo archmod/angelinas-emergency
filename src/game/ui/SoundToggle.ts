@@ -3,6 +3,7 @@ import { REGISTRY } from '@/config/constants';
 import type { AudioSystem } from '@/game/audio/AudioSystem';
 import type { SaveManager } from '@/game/systems/SaveManager';
 import { Button } from './Button';
+import { THEME } from './theme';
 
 /** Small "Sound: On/Off" button that persists to the save file. */
 export function addSoundToggle(scene: Phaser.Scene, x: number, y: number): Button {
@@ -21,7 +22,7 @@ export function addSoundToggle(scene: Phaser.Scene, x: number, y: number): Butto
       btn.setText(label());
       audio.play('click');
     },
-    { width: 150, height: 44, color: 0x3a3a48, textColor: '#f4f1ea', fontSize: 18 },
+    { width: 150, height: 44, color: THEME.button.muted, fontSize: 18 },
   );
   return btn;
 }

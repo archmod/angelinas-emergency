@@ -1,9 +1,9 @@
 import type Phaser from 'phaser';
 import { ENEMY_DEFS } from '@/config/enemies';
 import { TILE_KIND_COUNT, TILE_SIZE } from '@/config/tiles';
-import { SPOT_TEXTURE_SIZE, TEX, enemyTexture, walkAnim } from './AssetKeys';
-import { circle, type Ctx } from './canvas';
-import { drawAngelina, drawCamera, drawDog, drawPerson, drawPoop, drawSpot, drawStink, FRAME, WALK_FRAMES, type PersonLook } from './sprites';
+import { MENU_ART, SPOT_TEXTURE_SIZE, TEX, enemyTexture, walkAnim } from './AssetKeys';
+import { circle, rng, type Ctx } from './canvas';
+import { drawAngelina, drawCamera, drawDog, drawFootprint, drawFrogFoot, drawPerson, drawPoop, drawSpot, drawStink, FRAME, WALK_FRAMES, type PersonLook } from './sprites';
 import { drawTileset } from './tiles';
 
 /** Distinct looks per enemy archetype (see config/enemies.ts). */
@@ -59,6 +59,65 @@ export function generateArtTextures(scene: Phaser.Scene): void {
   canvasTexture(scene, TEX.BUTTON, 128, 128, (ctx) => {
     circle(ctx, 64, 64, 60, 'rgba(255,255,255,0.22)', { stroke: 'rgba(255,255,255,0.65)', lineWidth: 5 });
   });
+
+  generateMenuArt(scene);
+}
+
+/** Menu/level-select dressing: chocolate backdrop, faint poop+footprint pattern, big frog feet, poop mascot. */
+function generateMenuArt(scene: Phaser.Scene): void {
+  const M = MENU_ART;
+  // Backdrop: vertical chocolate gradient + warm glow near the top-centre + dark vignette. Low-res, stretched to fill.
+  canvasTexture(scene, TEX.MENU_BACKDROP, M.BACKDROP_W, M.BACKDROP_H, (ctx) => {
+    const w = M.BACKDROP_W;
+    const h = M.BACKDROP_H;
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, '#3d2515');
+    g.addColorStop(1, '#1e110a');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+    const glow = ctx.createRadialGradient(w * 0.5, h * 0.3, 0, w * 0.5, h * 0.3, w * 0.55);
+    glow.addColorStop(0, 'rgba(255, 205, 140, 0.16)');
+    glow.addColorStop(1, 'rgba(255, 205, 140, 0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, w, h);
+    const vig = ctx.createRadialGradient(w * 0.5, h * 0.5, h * 0.45, w * 0.5, h * 0.5, w * 0.75);
+    vig.addColorStop(0, 'rgba(0,0,0,0)');
+    vig.addColorStop(1, 'rgba(0,0,0,0.5)');
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, w, h);
+  });
+
+  // Seamless tile of faint little poops and footprints (each stamp is also drawn at the wrapped offsets).
+  canvasTexture(scene, TEX.MENU_PATTERN, M.PATTERN, M.PATTERN, (ctx) => {
+    const S = M.PATTERN;
+    const rand = rng(1234);
+    const stamp = (x: number, y: number, rot: number, draw: () => void) => {
+      for (const dx of [-S, 0, S]) {
+        for (const dy of [-S, 0, S]) {
+          ctx.save();
+          ctx.translate(x + dx, y + dy);
+          ctx.rotate(rot);
+          draw();
+          ctx.restore();
+        }
+      }
+    };
+    ctx.globalAlpha = 0.09;
+    for (let i = 0; i < 6; i++) {
+      stamp(rand() * S, rand() * S, (rand() - 0.5) * 0.8, () => drawPoop(ctx, -14, -14, { face: false, size: 28 }));
+    }
+    ctx.globalAlpha = 0.11;
+    for (let i = 0; i < 7; i++) {
+      stamp(rand() * S, rand() * S, rand() * Math.PI * 2, () => drawFootprint(ctx, -8, -10, 16, 20, '#ffe2b8'));
+    }
+    ctx.globalAlpha = 1;
+  });
+
+  // white so it can be tinted per use (trail = mud brown, level cards = frog green)
+  canvasTexture(scene, TEX.MENU_FOOTPRINT, M.FOOTPRINT_W, M.FOOTPRINT_H, (ctx) => drawFootprint(ctx, 0, 0, M.FOOTPRINT_W, M.FOOTPRINT_H, '#ffffff'));
+  canvasTexture(scene, TEX.MENU_FOOT, M.FOOT_W, M.FOOT_H, (ctx) => drawFrogFoot(ctx, 0, 0, M.FOOT_W, M.FOOT_H));
+  canvasTexture(scene, TEX.MENU_FOOT_SMEARED, M.FOOT_W, M.FOOT_H, (ctx) => drawFrogFoot(ctx, 0, 0, M.FOOT_W, M.FOOT_H, { smear: true }));
+  canvasTexture(scene, TEX.MENU_POOP, M.POOP, M.POOP, (ctx) => drawPoop(ctx, 0, 0, { size: M.POOP }));
 }
 
 function canvasTexture(scene: Phaser.Scene, key: string, w: number, h: number, draw: (ctx: Ctx) => void): Phaser.Textures.CanvasTexture {

@@ -21,7 +21,7 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: 'game',
   title: "Angelina's Emergency",
-  backgroundColor: '#1b1b24',
+  backgroundColor: '#2b1a10',
   banner: false,
   disableContextMenu: true,
   scale: {

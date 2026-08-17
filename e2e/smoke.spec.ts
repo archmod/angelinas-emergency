@@ -64,13 +64,13 @@ test('menu buttons respond to off-center taps, not just the exact center', async
     else await page.mouse.click(x, y);
   };
 
-  // "Levels" button: centered at (640, 507.6), 300×64 → press near its bottom-right corner.
-  await tap(640 + 130, 507.6 + 26);
+  // "Levels" button (MENU_LAYOUT.LEVELS): centered at (640, 513.6), 300×64 → press near its bottom-right corner.
+  await tap(640 + 130, 513.6 + 26);
   await waitForScene(page, 'LevelSelect');
   // "‹ Back" button: centered at (90, 40), 130×48 → press near its bottom-right corner.
   await tap(90 + 55, 40 + 18);
   await waitForScene(page, 'MainMenu');
-  // "Play" button: centered at (640, 417.6), 300×72 → press right-of-center and low.
+  // "Play" button (MENU_LAYOUT.PLAY): centered at (640, 417.6), 300×72 → press right-of-center and low.
   await tap(640 + 120, 417.6 + 28);
   await waitForScene(page, 'Game');
 

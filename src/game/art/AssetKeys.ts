@@ -10,6 +10,13 @@ export const TEX = {
   JOYSTICK_BASE: 'ui-joystick-base',
   JOYSTICK_THUMB: 'ui-joystick-thumb',
   BUTTON: 'ui-button',
+  // Menu dressing (see generate.ts → generateMenuArt)
+  MENU_BACKDROP: 'menu-backdrop',
+  MENU_PATTERN: 'menu-pattern',
+  MENU_FOOTPRINT: 'menu-footprint',
+  MENU_FOOT: 'menu-foot',
+  MENU_FOOT_SMEARED: 'menu-foot-smeared',
+  MENU_POOP: 'menu-poop',
 } as const;
 export type TextureKey = (typeof TEX)[keyof typeof TEX];
 
@@ -23,6 +30,18 @@ export const CHARACTER_SCALE = 0.5;
 
 /** Spot/exit marker textures are drawn at 2× (one marker = one grid tile); tileSprites need this tile scale. */
 export const SPOT_TEXTURE_SIZE = 64;
+
+/** Source sizes of the menu textures (the scenes scale them). */
+export const MENU_ART = {
+  BACKDROP_W: 320,
+  BACKDROP_H: 180,
+  PATTERN: 192,
+  FOOTPRINT_W: 64,
+  FOOTPRINT_H: 80,
+  FOOT_W: 160,
+  FOOT_H: 220,
+  POOP: 256,
+} as const;
 
 /** Name of the tileset inside the (blank/procedural) tilemap. Must match what LevelLoader passes to addTilesetImage. */
 export const TILESET_NAME = 'placeholder';
