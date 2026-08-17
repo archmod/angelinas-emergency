@@ -30,4 +30,10 @@ describe('input intent', () => {
     const up = deriveIntent(EMPTY_SOURCE, s({ action: true }));
     expect(up.actionReleased).toBe(true);
   });
+
+  it('fart is a tap: pressed on the down edge only', () => {
+    expect(deriveIntent(s({ fart: true }), EMPTY_SOURCE).fartPressed).toBe(true);
+    expect(deriveIntent(s({ fart: true }), s({ fart: true })).fartPressed).toBe(false);
+    expect(mergeSources([s({}), s({ fart: true })]).fart).toBe(true);
+  });
 });

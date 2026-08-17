@@ -307,6 +307,30 @@ export function drawStink(ctx: Ctx, ox: number, oy: number): void {
   }
 }
 
+/** Fart puff (64×64): a soft radial gas cloud, pale green-yellow fading to nothing at the rim. */
+export function drawPuff(ctx: Ctx, ox: number, oy: number): void {
+  const g = ctx.createRadialGradient(ox + 32, oy + 32, 2, ox + 32, oy + 32, 32);
+  g.addColorStop(0, 'rgba(226, 244, 170, 0.95)');
+  g.addColorStop(0.45, 'rgba(184, 224, 120, 0.7)');
+  g.addColorStop(1, 'rgba(140, 190, 90, 0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(ox, oy, 64, 64);
+  // a few darker wisps so it reads as gas, not a glow
+  ctx.strokeStyle = 'rgba(90, 120, 40, 0.35)';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  for (const [x0, y0, x1, y1] of [
+    [20, 40, 30, 26],
+    [34, 44, 42, 30],
+    [26, 22, 38, 18],
+  ] as const) {
+    ctx.beginPath();
+    ctx.moveTo(ox + x0, oy + y0);
+    ctx.quadraticCurveTo(ox + (x0 + x1) / 2 + 5, oy + (y0 + y1) / 2, ox + x1, oy + y1);
+    ctx.stroke();
+  }
+}
+
 /** Zone markers (64×64): a soft rounded square with a faint poop silhouette (spots) or a door arrow (exit). */
 export function drawSpot(ctx: Ctx, ox: number, oy: number, kind: 'hidden' | 'exposed' | 'exit'): void {
   const color = kind === 'hidden' ? '#7ee787' : kind === 'exposed' ? '#ffd166' : '#7ab6ff';

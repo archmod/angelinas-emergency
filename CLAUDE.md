@@ -19,7 +19,10 @@ Full design/milestone plan: `~/.claude/plans/wise-dancing-walrus.md` (M0 scaffol
 
 ## Architecture rules
 - `src/core/**` is **Phaser-free** (enforced by ESLint `no-restricted-imports`): level schema/loaders, grid raycast/A*,
-  detection (vision/awareness/noise), enemy FSM, rules (poop/urgency/objectives/score), input intent. All unit-tested.
+  detection (vision/awareness/noise), enemy FSM, rules (poop/urgency/gas/objectives/score), input intent. All unit-tested.
+- Farts: `src/core/rules/gas.ts` (gas meter fills faster with urgency → forced fart at 1; F/TOOT releases early, quieter)
+  bridged by `src/game/systems/FartSystem.ts` (a fart = a burst of `fart` noise pulses so awareness accumulates like
+  footsteps; lingering cloud → `Enemy.smell()` for anyone walking through). Tunables in `BALANCE.fart`.
 - `src/game/**` is the Phaser side: scenes, entities, systems, input sources, art registry, UI, debug.
 - Scene keys/depths/registry keys live in `src/config/constants.ts`; ALL gameplay tunables go in `src/config/balance.ts`.
 - Logical resolution 1280×720, `Scale.FIT` + `CENTER_BOTH`, landscape only (DOM rotate overlay in portrait).

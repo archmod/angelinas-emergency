@@ -29,6 +29,29 @@ export const BALANCE = {
     runMultiplier: 1.5,
     reliefPerPoop: 0.7,
   },
+  /** Gas builds up alongside urgency; when it fills she farts whether she likes it or not (see core/rules/gas.ts). */
+  fart: {
+    /** Seconds from empty to full at zero urgency. */
+    gasSeconds: 45,
+    /** Build-up rate multiplier grows to (1 + urgencyBoost) at full urgency. */
+    urgencyBoost: 2,
+    /** Minimum gas needed to let one out on purpose. */
+    minRelease: 0.2,
+    /** Gas level where the rumbling warning starts. */
+    warnAt: 0.7,
+    /**
+     * A fart is a short burst of noise pulses (enemy awareness accumulates per pulse, like footsteps): a deliberate
+     * toot at minRelease is quiet and short, a full-pressure one is loud and long; forced ones carry farther still.
+     */
+    noise: {
+      quiet: { radius: 50, loudness: 0.25, pulses: 2 },
+      loud: { radius: 200, loudness: 0.8, pulses: 4 },
+      pulseInterval: 0.15,
+      forcedRadiusMul: 1.25,
+    },
+    /** The cloud hangs around; an enemy who walks into it gets a whiff (perceived like a noise of this level, once per enemy). */
+    cloud: { lingerSeconds: 4, radius: 28, smellLevel: 0.8 },
+  },
   enemy: {
     /** How long an enemy is stalled after stepping in poop. */
     slipSeconds: 1.6,
@@ -47,5 +70,6 @@ export const BALANCE = {
     joystickDeadzone: 0.15,
     actionButtonRadius: 54,
     runButtonRadius: 44,
+    fartButtonRadius: 40,
   },
 } as const;

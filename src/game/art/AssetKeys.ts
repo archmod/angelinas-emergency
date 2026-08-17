@@ -4,6 +4,7 @@ export const TEX = {
   PLAYER: 'player',
   POOP: 'poop',
   STINK: 'stink',
+  PUFF: 'puff',
   SPOT_HIDDEN: 'spot-hidden',
   SPOT_EXPOSED: 'spot-exposed',
   EXIT: 'exit',

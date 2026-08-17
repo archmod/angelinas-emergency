@@ -10,6 +10,8 @@ export interface SourceState {
   sneak: boolean;
   /** Primary action (poop / interact) held. */
   action: boolean;
+  /** Let a fart out on purpose (edge-triggered via `fartPressed`). */
+  fart: boolean;
   pause: boolean;
 }
 
@@ -18,10 +20,11 @@ export interface InputIntent extends SourceState {
   moveMagnitude: number;
   actionPressed: boolean;
   actionReleased: boolean;
+  fartPressed: boolean;
   pausePressed: boolean;
 }
 
-export const EMPTY_SOURCE: SourceState = { moveX: 0, moveY: 0, run: false, sneak: false, action: false, pause: false };
+export const EMPTY_SOURCE: SourceState = { moveX: 0, moveY: 0, run: false, sneak: false, action: false, fart: false, pause: false };
 
 /** Clamps a move vector to unit length (diagonal keyboard input would otherwise be √2 fast). */
 export const clampMove = (x: number, y: number): { x: number; y: number; magnitude: number } => {
@@ -44,6 +47,7 @@ export function mergeSources(sources: readonly SourceState[]): SourceState {
     out.run ||= s.run;
     out.sneak ||= s.sneak;
     out.action ||= s.action;
+    out.fart ||= s.fart;
     out.pause ||= s.pause;
   }
   out.moveX = best.moveX;
@@ -61,6 +65,7 @@ export function deriveIntent(current: SourceState, previous: SourceState): Input
     moveMagnitude: mv.magnitude,
     actionPressed: current.action && !previous.action,
     actionReleased: !current.action && previous.action,
+    fartPressed: current.fart && !previous.fart,
     pausePressed: current.pause && !previous.pause,
   };
 }

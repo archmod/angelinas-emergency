@@ -42,7 +42,8 @@ export class ResultScene extends Phaser.Scene {
     this.time.delayedCall(900, () => joshau.peek(win ? 'Hmm… nothing? I’ll get you next time.' : accident ? '…did you just—?!' : 'GOTCHA! I KNEW it!', 0, true));
 
     const s = data.stats;
-    const lines = [`Time  ${fmtTime(s.timeSeconds)}  (par ${fmtTime(s.parSeconds)})`, `Suspicious looks  ${s.timesSuspicious}   Times spotted  ${s.timesAlerted}`];
+    const toots = s.farts === 0 ? 'Toots  0  (held it all in!)' : `Toots  ${s.farts}   Slipped out  ${s.forcedFarts}`;
+    const lines = [`Time  ${fmtTime(s.timeSeconds)}  (par ${fmtTime(s.parSeconds)})`, `Suspicious looks  ${s.timesSuspicious}   Times spotted  ${s.timesAlerted}`, toots];
     const save = this.registry.get(REGISTRY.SAVE) as SaveManager;
     let nextId: string | null = null;
     if (win) {

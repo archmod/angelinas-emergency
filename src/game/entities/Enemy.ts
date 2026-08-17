@@ -117,6 +117,12 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     return this.stunTimer > 0;
   }
 
+  /** Catching a whiff of something (a lingering fart cloud): perceived like a noise of `level` coming from `pos`. */
+  smell(pos: Vec2, level: number): void {
+    if (this.def.hearingRadius <= 0) return; // cameras have no nose
+    if (!this.heard || this.heard.level < level) this.heard = { pos: { ...pos }, level };
+  }
+
   tick(dt: number, player: PlayerSnapshot): void {
     if (this.stunTimer > 0) {
       this.stunTimer -= dt;

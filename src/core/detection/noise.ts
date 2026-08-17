@@ -1,6 +1,6 @@
 import { dist, type Vec2 } from '@/core/math/vec';
 
-export type NoiseKind = 'footstep' | 'poop' | 'shout' | 'throw' | 'bump';
+export type NoiseKind = 'footstep' | 'poop' | 'fart' | 'shout' | 'throw' | 'bump';
 
 export interface NoiseEvent {
   pos: Vec2;

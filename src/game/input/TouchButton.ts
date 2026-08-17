@@ -8,6 +8,7 @@ export class TouchButton {
   readonly image: Phaser.GameObjects.Image;
   readonly label: Phaser.GameObjects.Text;
   private readonly downPointers = new Set<number>();
+  private tapLatch = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, radius: number, text: string, tint: number) {
     this.image = scene.add
@@ -33,6 +34,13 @@ export class TouchButton {
     return this.downPointers.size > 0;
   }
 
+  /** True once per press, even if the finger came and went between two frames. */
+  takeTap(): boolean {
+    const t = this.tapLatch;
+    this.tapLatch = false;
+    return t;
+  }
+
   setPosition(x: number, y: number): void {
     this.image.setPosition(x, y);
     this.label.setPosition(x, y);
@@ -40,6 +48,7 @@ export class TouchButton {
 
   private press(id: number): void {
     this.downPointers.add(id);
+    this.tapLatch = true;
     this.refresh();
   }
   private releasePointer(id: number): void {

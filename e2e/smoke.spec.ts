@@ -290,6 +290,49 @@ test('hold GO on a spot to poop, then reach the exit to win', async ({ page, isM
   expect(errors.filter((e) => !e.includes('GPU stall')), errors.join('\n')).toEqual([]);
 });
 
+test('F toots on purpose; a forced fart next to an enemy makes them react', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'uses keyboard');
+  const errors = collectErrors(page);
+  await page.goto('/?debug=1&god=1&level=test-01');
+  await waitForScene(page, 'MainMenu');
+  await page.keyboard.press('Space');
+  await waitForScene(page, 'Game');
+  await page.waitForTimeout(200);
+
+  type G = {
+    player: { x: number; y: number; setPosition(x: number, y: number): void };
+    enemies: { x: number; y: number; facing: number; mode: string; awareness: number }[];
+    fart: { state: { gas: number; farts: number; forcedFarts: number; warned: boolean } };
+    run: { farts: number; forcedFarts: number };
+  };
+  const gameScene = (): G => (window as unknown as { __game: { scene: { getScene(k: string): G } } }).__game.scene.getScene('Game');
+  const state = () => page.evaluate((fnSrc) => { const g = (new Function(`return (${fnSrc})()`) as () => G)(); return { ...g.fart.state, mode: g.enemies[0]!.mode, runFarts: g.run.farts }; }, gameScene.toString());
+
+  // Below the release threshold nothing happens; above it, F lets one out and empties the meter.
+  await page.keyboard.press('f');
+  await page.waitForTimeout(100);
+  expect((await state()).farts).toBe(0);
+  await page.evaluate((fnSrc) => { const g = (new Function(`return (${fnSrc})()`) as () => G)(); g.fart.state = { ...g.fart.state, gas: 0.5 }; }, gameScene.toString());
+  await page.keyboard.press('f');
+  await page.waitForTimeout(150);
+  const afterToot = await state();
+  expect(afterToot.farts).toBe(1);
+  expect(afterToot.forcedFarts).toBe(0);
+  expect(afterToot.gas).toBeLessThan(0.05);
+  expect(afterToot.runFarts).toBe(1);
+
+  // Full pressure right behind the ranger (outside his cone): it rips out on its own and he hears it.
+  await page.evaluate((fnSrc) => {
+    const g = (new Function(`return (${fnSrc})()`) as () => G)();
+    const e = g.enemies[0]!;
+    g.player.setPosition(e.x - Math.cos(e.facing) * 80, e.y - Math.sin(e.facing) * 80);
+    g.fart.state = { ...g.fart.state, gas: 0.999 };
+  }, gameScene.toString());
+  await page.waitForFunction((fnSrc) => (new Function(`return (${fnSrc})()`) as () => G)().fart.state.forcedFarts >= 1, gameScene.toString(), { timeout: 3000 });
+  await page.waitForFunction((fnSrc) => (new Function(`return (${fnSrc})()`) as () => G)().enemies[0]!.mode !== 'patrol', gameScene.toString(), { timeout: 4000 });
+  expect(errors.filter((e) => !e.includes('GPU stall')), errors.join('\n')).toEqual([]);
+});
+
 test('Esc pauses and resumes the game', async ({ page, isMobile }) => {
   test.skip(isMobile, 'uses keyboard');
   await page.goto('/');

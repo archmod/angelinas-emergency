@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { evaluateObjectives } from './objectives';
 import { createPoopState, DEFAULT_POOP_CONFIG, stepPoop, type PoopEvent, type PoopInput } from './poopAction';
-import { computeScore } from './score';
+import { computeScore, type RunStats } from './score';
 import { DEFAULT_URGENCY_CONFIG, isAccident, relieve, stepUrgency } from './urgency';
 
 const input = (p: Partial<PoopInput> = {}): PoopInput => ({ held: true, spotMultiplier: 1, moving: false, interrupted: false, alerted: false, ...p });
@@ -83,9 +83,10 @@ describe('objectives', () => {
 
 describe('score', () => {
   it('ranks clean fast runs S, clean slow runs A, one alert B, otherwise C', () => {
-    expect(computeScore({ timeSeconds: 40, parSeconds: 60, timesSuspicious: 0, timesAlerted: 0, urgencyAtFinish: 0.2 })).toMatchObject({ rank: 'S', stars: 3, score: 1100 });
-    expect(computeScore({ timeSeconds: 90, parSeconds: 60, timesSuspicious: 1, timesAlerted: 0, urgencyAtFinish: 0.2 }).rank).toBe('A');
-    expect(computeScore({ timeSeconds: 90, parSeconds: 60, timesSuspicious: 3, timesAlerted: 1, urgencyAtFinish: 0.2 })).toMatchObject({ rank: 'B', stars: 2 });
-    expect(computeScore({ timeSeconds: 90, parSeconds: 60, timesSuspicious: 3, timesAlerted: 4, urgencyAtFinish: 0.2 })).toMatchObject({ rank: 'C', stars: 1, score: 0 });
+    const stats = (p: Partial<RunStats>): RunStats => ({ timeSeconds: 90, parSeconds: 60, timesSuspicious: 0, timesAlerted: 0, urgencyAtFinish: 0.2, farts: 0, forcedFarts: 0, ...p });
+    expect(computeScore(stats({ timeSeconds: 40 }))).toMatchObject({ rank: 'S', stars: 3, score: 1100 });
+    expect(computeScore(stats({ timesSuspicious: 1 })).rank).toBe('A');
+    expect(computeScore(stats({ timesSuspicious: 3, timesAlerted: 1 }))).toMatchObject({ rank: 'B', stars: 2 });
+    expect(computeScore(stats({ timesSuspicious: 3, timesAlerted: 4 }))).toMatchObject({ rank: 'C', stars: 1, score: 0 });
   });
 });

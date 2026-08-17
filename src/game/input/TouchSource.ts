@@ -6,11 +6,12 @@ import type { InputSource } from './InputManager';
 import { TouchButton } from './TouchButton';
 import { VirtualJoystick } from './VirtualJoystick';
 
-/** Touch controls: floating joystick (left) + Action and Run buttons (right). Created inside HudScene. */
+/** Touch controls: floating joystick (left) + GO / RUN / TOOT buttons (right). Created inside HudScene. */
 export class TouchSource implements InputSource {
   private readonly joystick: VirtualJoystick;
   private readonly actionButton: TouchButton;
   private readonly runButton: TouchButton;
+  private readonly fartButton: TouchButton;
 
   constructor(scene: Phaser.Scene) {
     this.joystick = new VirtualJoystick(scene);
@@ -19,6 +20,9 @@ export class TouchSource implements InputSource {
     const rr = BALANCE.touch.runButtonRadius;
     this.actionButton = new TouchButton(scene, GAME_WIDTH - margin - ar, GAME_HEIGHT - margin - ar, ar, 'GO', 0x7ee787);
     this.runButton = new TouchButton(scene, GAME_WIDTH - margin - ar * 2 - rr - 24, GAME_HEIGHT - margin - rr, rr, 'RUN', 0xffd166);
+    // TOOT sits above GO: a tap lets a little gas out early (quiet) before it forces its way out (loud).
+    const fr = BALANCE.touch.fartButtonRadius;
+    this.fartButton = new TouchButton(scene, GAME_WIDTH - margin - ar, GAME_HEIGHT - margin - ar * 2 - 22 - fr, fr, 'TOOT', 0xb5e550);
   }
 
   read(): SourceState {
@@ -29,6 +33,7 @@ export class TouchSource implements InputSource {
       run: this.runButton.held,
       sneak: false,
       action: this.actionButton.held,
+      fart: this.fartButton.takeTap() || this.fartButton.held,
       pause: false,
     };
   }
@@ -37,5 +42,6 @@ export class TouchSource implements InputSource {
     this.joystick.destroy();
     this.actionButton.destroy();
     this.runButton.destroy();
+    this.fartButton.destroy();
   }
 }

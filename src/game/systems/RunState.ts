@@ -16,6 +16,10 @@ export class RunState {
   objectives: ObjectiveStatus;
   /** Poop progress 0..1 mirrored from the PoopSystem for the HUD. */
   poopProgress = 0;
+  /** Gas meter 0..1 and fart counts mirrored from the FartSystem (HUD + result stats). */
+  gas = 0;
+  farts = 0;
+  forcedFarts = 0;
   private readonly urgencyCfg: UrgencyConfig;
 
   constructor(readonly level: LevelData) {
@@ -50,6 +54,8 @@ export class RunState {
       timesSuspicious: this.timesSuspicious,
       timesAlerted: this.timesAlerted,
       urgencyAtFinish: this.urgency,
+      farts: this.farts,
+      forcedFarts: this.forcedFarts,
     };
   }
 }

@@ -5,6 +5,9 @@ export interface RunStats {
   timesAlerted: number;
   /** 0..1 urgency when the level ended (lower = calmer). */
   urgencyAtFinish: number;
+  /** Farts this run, and how many slipped out on their own (full pressure). */
+  farts: number;
+  forcedFarts: number;
 }
 
 export type Rank = 'S' | 'A' | 'B' | 'C';

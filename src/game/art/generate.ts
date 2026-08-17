@@ -3,7 +3,7 @@ import { ENEMY_DEFS } from '@/config/enemies';
 import { TILE_KIND_COUNT, TILE_SIZE } from '@/config/tiles';
 import { MENU_ART, SPOT_TEXTURE_SIZE, TEX, enemyTexture, walkAnim } from './AssetKeys';
 import { circle, rng, type Ctx } from './canvas';
-import { drawAngelina, drawCamera, drawDog, drawFootprint, drawFrogFoot, drawJoshau, drawPerson, drawPoop, drawSpot, drawStink, FRAME, WALK_FRAMES, type PersonLook } from './sprites';
+import { drawAngelina, drawCamera, drawDog, drawFootprint, drawFrogFoot, drawJoshau, drawPerson, drawPoop, drawPuff, drawSpot, drawStink, FRAME, WALK_FRAMES, type PersonLook } from './sprites';
 import { getMaterialCanvases } from './ground';
 import { drawTileset } from './tiles';
 
@@ -46,6 +46,7 @@ export function generateArtTextures(scene: Phaser.Scene): void {
 
   canvasTexture(scene, TEX.POOP, 64, 64, (ctx) => drawPoop(ctx, 0, 0));
   canvasTexture(scene, TEX.STINK, 48, 48, (ctx) => drawStink(ctx, 0, 0));
+  canvasTexture(scene, TEX.PUFF, 64, 64, (ctx) => drawPuff(ctx, 0, 0));
   const S = SPOT_TEXTURE_SIZE;
   canvasTexture(scene, TEX.SPOT_HIDDEN, S, S, (ctx) => drawSpot(ctx, 0, 0, 'hidden'));
   canvasTexture(scene, TEX.SPOT_EXPOSED, S, S, (ctx) => drawSpot(ctx, 0, 0, 'exposed'));

@@ -3,7 +3,8 @@ import { BALANCE } from '@/config/balance';
 import { DEPTH, REGISTRY, SCENES } from '@/config/constants';
 import { TILE_SIZE } from '@/config/tiles';
 import type { Rect } from '@/core/level/schema';
-import { SPOT_TEXTURE_SIZE, TEX } from '@/game/art/AssetKeys';
+import type { GasEvent } from '@/core/rules/gas';
+import { CHARACTER_SCALE, SPOT_TEXTURE_SIZE, TEX } from '@/game/art/AssetKeys';
 import type { AudioSystem } from '@/game/audio/AudioSystem';
 import { DebugOverlay } from '@/game/debug/DebugOverlay';
 import type { DebugFlags } from '@/game/debug/flags';
@@ -15,12 +16,14 @@ import { KeyboardSource } from '@/game/input/KeyboardSource';
 import { setupCamera } from '@/game/systems/CameraRig';
 import { DetectionSystem } from '@/game/systems/DetectionSystem';
 import { EventBus } from '@/game/systems/EventBus';
+import { FartSystem } from '@/game/systems/FartSystem';
 import { buildLevel, type BuiltLevel } from '@/game/systems/LevelLoader';
 import { NavSystem } from '@/game/systems/NavSystem';
 import { NoiseSystem } from '@/game/systems/NoiseSystem';
 import { PoopSystem } from '@/game/systems/PoopSystem';
 import { RunState } from '@/game/systems/RunState';
 import { VisionConeRenderer } from '@/game/systems/VisionConeRenderer';
+import { THEME } from '@/game/ui/theme';
 import { DEFAULT_LEVEL_ID, getLevel, type LevelEntry } from '@/levels/registry';
 import type { ResultSceneData } from './ResultScene';
 
@@ -36,6 +39,7 @@ export class GameScene extends Phaser.Scene {
   bus!: EventBus;
   run!: RunState;
   poop!: PoopSystem;
+  fart!: FartSystem;
   private entry!: LevelEntry;
   private inputManager!: InputManager;
   private nav!: NavSystem;
@@ -48,6 +52,7 @@ export class GameScene extends Phaser.Scene {
   private audio!: AudioSystem;
   private exitWasOpen = false;
   private ended = false;
+  private lastDryToot = -Infinity;
 
   constructor() {
     super(SCENES.GAME);
@@ -80,6 +85,11 @@ export class GameScene extends Phaser.Scene {
 
     this.poop = new PoopSystem(this, levelData.poopSpots, this.noise);
     this.poop.onCompleted = (p) => this.onPoopCompleted(p);
+    this.fart = new FartSystem(this, this.noise);
+    this.fart.onSniff = (enemy) => {
+      this.audio.play('sniff', 0.3);
+      this.floatText(enemy.x, enemy.y - 30, 'Pee-yew!', THEME.colors.warn);
+    };
 
     this.detection = new DetectionSystem(this.level.grid, () => this.enemies);
     this.cones = new VisionConeRenderer(this, this.level.grid, () => this.enemies);
@@ -89,7 +99,8 @@ export class GameScene extends Phaser.Scene {
     this.inputManager.addSource(new KeyboardSource(this));
     const req = levelData.rules.requiredPoops;
     const intro = `Find a spot and poop ${req === 1 ? 'once' : `${req} times`} without anyone noticing${levelData.rules.exitRequired ? ', then slip away to the exit' : ''}. Joshau must never find out.`;
-    this.scene.launch(SCENES.HUD, { input: this.inputManager, levelName: this.entry.name, bus: this.bus, run: this.run, intro });
+    const tip = 'Gas builds up — toot early when nobody’s near (quiet), or it rips out on its own (LOUD).';
+    this.scene.launch(SCENES.HUD, { input: this.inputManager, levelName: this.entry.name, bus: this.bus, run: this.run, intro, tip });
 
     setupCamera(this, this.player, this.level.worldWidth, this.level.worldHeight);
 
@@ -116,6 +127,7 @@ export class GameScene extends Phaser.Scene {
       this.scene.stop(SCENES.HUD);
       this.inputManager.destroy();
       this.poop.destroy();
+      this.fart.destroy();
       this.bus.destroy();
       this.enemies = [];
     });
@@ -133,6 +145,7 @@ export class GameScene extends Phaser.Scene {
 
   private onPoopCompleted(poop: Poop): void {
     this.run.onPoopCompleted();
+    this.fart.vent();
     this.bus.emit('poop:completed', { total: this.run.poopsCompleted });
     this.cameras.main.flash(200, 126, 231, 135, false);
     this.audio.play('poopDone');
@@ -145,6 +158,45 @@ export class GameScene extends Phaser.Scene {
         this.floatText(enemy.x, enemy.y - 30, 'Eww!', '#c99a5b');
         this.noise.emit({ pos: enemy.pos, radius: 60, loudness: 0.4, kind: 'bump', sourceId: enemy.id });
       }
+    });
+  }
+
+  /** Sound, text and a wobble for each gas event (see core/rules/gas.ts). */
+  private onGasEvent(ev: GasEvent): void {
+    const p = this.player;
+    if (ev.type === 'gurgle') {
+      this.audio.play('gurgle');
+      this.floatText(p.x, p.y - 36, '*grrrumble*', THEME.colors.warn);
+      this.wobblePlayer(3, 1.1);
+    } else if (ev.type === 'fart') {
+      const big = ev.forced || ev.strength > 0.6;
+      this.audio.play(big ? 'fartBig' : 'fart');
+      const label = ev.forced ? 'PFFRRRRT!!' : ev.strength < 0.35 ? 'pfft' : ev.strength < 0.7 ? 'Pffft!' : 'PFFRRT!';
+      const color = ev.forced ? THEME.colors.danger : ev.strength < 0.35 ? THEME.colors.ok : THEME.colors.warn;
+      this.floatText(p.x, p.y - 36, label, color);
+      this.wobblePlayer(ev.forced ? 3 : 1, ev.forced ? 1.25 : 1.12);
+      if (ev.forced) this.cameras.main.shake(90, 0.003);
+      this.bus.emit('fart', { forced: ev.forced, strength: ev.strength });
+    } else if (ev.type === 'dry') {
+      if (this.time.now - this.lastDryToot < 1000) return;
+      this.lastDryToot = this.time.now;
+      this.floatText(p.x, p.y - 36, '…nothing yet', THEME.colors.textDim);
+    }
+  }
+
+  /** Quick squash-and-stretch on Angelina (repeats = wobble count, amount = peak scale factor). */
+  private wobblePlayer(repeats: number, amount: number): void {
+    this.tweens.killTweensOf(this.player);
+    this.player.setScale(CHARACTER_SCALE);
+    this.tweens.add({
+      targets: this.player,
+      scaleX: CHARACTER_SCALE * amount,
+      scaleY: CHARACTER_SCALE * (2 - amount),
+      duration: 70,
+      yoyo: true,
+      repeat: repeats - 1,
+      ease: 'Sine.easeInOut',
+      onComplete: () => this.player.setScale(CHARACTER_SCALE),
     });
   }
 
@@ -203,7 +255,10 @@ export class GameScene extends Phaser.Scene {
       this.pause();
       return;
     }
-    if (!this.ended) this.poop.update(dt, intent, this.player, this.enemies);
+    if (!this.ended) {
+      this.poop.update(dt, intent, this.player, this.enemies);
+      for (const ev of this.fart.update(dt, intent, this.player, this.enemies, this.run.urgency, this.poop.state.active)) this.onGasEvent(ev);
+    }
     this.player.update(intent, dt);
 
     const snapshot: PlayerSnapshot = {
@@ -220,6 +275,9 @@ export class GameScene extends Phaser.Scene {
 
     if (!this.ended) {
       this.run.poopProgress = this.poop.state.progress;
+      this.run.gas = this.fart.state.gas;
+      this.run.farts = this.fart.state.farts;
+      this.run.forcedFarts = this.fart.state.forcedFarts;
       const outcome = this.run.tick(dt, this.player.stance === 'run' && this.player.speed > 1, this.player.x, this.player.y);
       if (this.exitSprite) this.exitSprite.setAlpha(this.run.objectives.exitOpen ? 1 : 0.35);
       if (this.run.objectives.exitOpen && !this.exitWasOpen) {

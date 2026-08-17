@@ -14,10 +14,13 @@ hold GO to let it out, and don't get spotted by the park ranger, the nosy neighb
 | Run (fast, noisy) | Shift | RUN button |
 | Sneak (slow, silent) | C | — |
 | Poop / interact | hold Space or E | hold GO |
+| Toot (let gas out early) | F | TOOT button |
 | Pause | Esc / P | ⏸ button |
 
-Enemies see in the yellow cones (walls and bushes block sight) and hear running footsteps and… the deed itself.
-Bushes, lockers and hidden spots hide you unless someone walks right into you. Watch the urgency meter.
+Enemies see in the yellow cones (walls and bushes block sight) and hear running footsteps, farts and… the deed itself.
+Bushes, lockers and hidden spots hide you unless someone walks right into you. Watch the urgency meter — and the gas
+meter under it: gas builds up (faster the more urgent she is) and when it fills she farts on her own, LOUD. Toot early
+while nobody's near and it's barely a whisper; the cloud lingers, and anyone who walks through it gets suspicious.
 
 ## Develop
 

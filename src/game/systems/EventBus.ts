@@ -12,6 +12,8 @@ export interface GameEvents {
   'level:won': Record<string, never>;
   'level:lost': { reason: 'caught' | 'accident' };
   'poop:completed': { total: number };
+  /** She farted. `forced` = it slipped out at full pressure; `strength` 0..1 (louder = bigger). */
+  fart: { forced: boolean; strength: number };
   'ui:pause': Record<string, never>;
 }
 

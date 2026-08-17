@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
 
-export type SfxName = 'click' | 'step' | 'suspicious' | 'alert' | 'poopNoise' | 'poopDone' | 'caught' | 'accident' | 'win' | 'slip' | 'exitOpen';
+export type SfxName = 'click' | 'step' | 'suspicious' | 'alert' | 'poopNoise' | 'poopDone' | 'caught' | 'accident' | 'win' | 'slip' | 'exitOpen' | 'gurgle' | 'fart' | 'fartBig' | 'sniff';
 
 interface Tone {
   type: OscillatorType;
@@ -48,6 +48,28 @@ const PATCHES: Record<SfxName, Tone[]> = {
   exitOpen: [
     { type: 'triangle', from: 660, duration: 0.1, gain: 0.1 },
     { type: 'triangle', from: 990, duration: 0.18, gain: 0.1, delay: 0.1 },
+  ],
+  // Tummy rumble: three quick rising blips (the "uh-oh" before a forced fart).
+  gurgle: [
+    { type: 'sine', from: 180, to: 320, duration: 0.07, gain: 0.07 },
+    { type: 'sine', from: 220, to: 380, duration: 0.07, gain: 0.07, delay: 0.1 },
+    { type: 'sine', from: 260, to: 430, duration: 0.09, gain: 0.08, delay: 0.2 },
+  ],
+  // A polite little toot.
+  fart: [
+    { type: 'sawtooth', from: 120, to: 70, duration: 0.18, gain: 0.09 },
+    { type: 'square', from: 60, to: 45, duration: 0.2, gain: 0.05, delay: 0.02 },
+  ],
+  // The big one: long descending rasp with a second ripple.
+  fartBig: [
+    { type: 'sawtooth', from: 100, to: 45, duration: 0.55, gain: 0.13 },
+    { type: 'square', from: 55, to: 38, duration: 0.5, gain: 0.07, delay: 0.04 },
+    { type: 'sawtooth', from: 90, to: 60, duration: 0.2, gain: 0.08, delay: 0.32, glide: 'lin' },
+  ],
+  // An enemy catching a whiff.
+  sniff: [
+    { type: 'triangle', from: 700, to: 500, duration: 0.12, gain: 0.07 },
+    { type: 'triangle', from: 500, to: 380, duration: 0.14, gain: 0.07, delay: 0.12 },
   ],
 };
 
