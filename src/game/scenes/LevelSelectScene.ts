@@ -24,12 +24,13 @@ export class LevelSelectScene extends Phaser.Scene {
     const progress = save.get();
 
     addMenuBackdrop(this);
-    this.add.text(GAME_WIDTH / 2, 40, 'Pick a spot', headingStyle(44)).setOrigin(0.5);
+    this.add.text(GAME_WIDTH / 2, 36, 'Pick a spot', headingStyle(44)).setOrigin(0.5);
+    this.add.text(GAME_WIDTH / 2, 74, 'Somewhere private. Somewhere Joshau isn’t looking.', textStyle(17, THEME.colors.textDim)).setOrigin(0.5);
     new Button(this, 90, 40, '‹ Back', () => this.scene.start(SCENES.MAIN_MENU), { width: 130, height: 48, color: THEME.button.muted, fontSize: 20 });
     this.input.keyboard?.once('keydown-ESC', () => this.scene.start(SCENES.MAIN_MENU));
 
     const worlds: WorldId[] = ['park', 'neighborhood', 'school'];
-    let y = 100;
+    let y = 104;
     for (const world of worlds) {
       const levels = CAMPAIGN.filter((l) => l.world === world);
       if (levels.length === 0) continue;
@@ -44,7 +45,7 @@ export class LevelSelectScene extends Phaser.Scene {
         const cy = y + row * (CARD_H + GAP) + CARD_H / 2;
         const unlocked = isUnlocked(progress, CAMPAIGN, lvl.id);
         const best = progress.completed[lvl.id];
-        this.card(x, cy, i + 1, lvl.name, unlocked, best ? `${'★'.repeat(best.stars)}${'☆'.repeat(3 - best.stars)}  ${best.rank}` : unlocked ? 'Not yet played' : 'Locked', () => {
+        this.card(x, cy, i + 1, lvl.name, unlocked, best ? `${'★'.repeat(best.stars)}${'☆'.repeat(3 - best.stars)}  ${best.rank}` : unlocked ? 'Still holding it in…' : 'Locked', () => {
           if (unlocked) this.scene.start(SCENES.GAME, { levelId: lvl.id });
         });
       });

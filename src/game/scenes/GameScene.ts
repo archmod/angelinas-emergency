@@ -88,7 +88,7 @@ export class GameScene extends Phaser.Scene {
     this.inputManager = new InputManager();
     this.inputManager.addSource(new KeyboardSource(this));
     const req = levelData.rules.requiredPoops;
-    const intro = `Poop ${req === 1 ? 'once' : `${req} times`} without getting caught${levelData.rules.exitRequired ? ', then reach the exit' : ''}.`;
+    const intro = `Find a spot and poop ${req === 1 ? 'once' : `${req} times`} without anyone noticing${levelData.rules.exitRequired ? ', then slip away to the exit' : ''}. Joshau must never find out.`;
     this.scene.launch(SCENES.HUD, { input: this.inputManager, levelName: this.entry.name, bus: this.bus, run: this.run, intro });
 
     setupCamera(this, this.player, this.level.worldWidth, this.level.worldHeight);

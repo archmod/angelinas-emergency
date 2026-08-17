@@ -12,7 +12,7 @@ export class PauseScene extends Phaser.Scene {
 
   create(): void {
     this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, THEME.colors.bg, 0.7);
-    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.3, 'Paused', headingStyle(60)).setOrigin(0.5);
+    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.3, 'Holding it in…', headingStyle(60)).setOrigin(0.5);
 
     const resume = () => {
       this.scene.resume(SCENES.GAME);
@@ -28,7 +28,7 @@ export class PauseScene extends Phaser.Scene {
       this.scene.stop(SCENES.GAME);
       this.scene.start(SCENES.MAIN_MENU);
     };
-    new Button(this, GAME_WIDTH / 2, GAME_HEIGHT * 0.5, 'Resume', resume);
+    new Button(this, GAME_WIDTH / 2, GAME_HEIGHT * 0.5, 'Keep sneaking', resume);
     new Button(this, GAME_WIDTH / 2, GAME_HEIGHT * 0.5 + 84, 'Restart level', restart, { color: THEME.button.warn });
     new Button(this, GAME_WIDTH / 2, GAME_HEIGHT * 0.5 + 168, 'Main menu', menu, { color: THEME.button.poop });
     addSoundToggle(this, GAME_WIDTH - 110, GAME_HEIGHT - 44);

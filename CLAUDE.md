@@ -1,7 +1,9 @@
 # Angelina's Emergency — project notes for Claude Code
 
-2D top-down stealth game for the browser (desktop + iOS Safari). Angelina must sneak to a poop spot and
-finish without being detected; enemies patrol with vision cones and give chase. Worlds: park, neighborhood, school.
+2D top-down stealth game for the browser (desktop + iOS Safari). Premise: Angelina has to poop (and fart) a LOT and
+nobody can ever know — least of all her boyfriend **Joshau** (spelled that way), who is always trying to catch her in
+the act. She must sneak to a poop spot and finish without being detected; enemies patrol with vision cones and give
+chase. Worlds: park, neighborhood, school. All player-facing copy should keep this voice (secretive, urgent, cheeky).
 Full design/milestone plan: `~/.claude/plans/wise-dancing-walrus.md` (M0 scaffold → M6 ship).
 
 ## Stack

@@ -1,7 +1,8 @@
 # Angelina's Emergency
 
-A 2D top-down stealth game for the browser — desktop and iPhone (Safari). Angelina urgently needs to poop; sneak to a spot,
-hold GO to do the deed, and don't get caught by the park ranger, the nosy neighbors, or the hall monitor.
+A 2D top-down stealth game for the browser — desktop and iPhone (Safari). Angelina has to poop (and fart) a lot, and nobody
+can ever know — least of all her boyfriend Joshau, who is always trying to catch her in the act. Sneak to a private spot,
+hold GO to let it out, and don't get spotted by the park ranger, the nosy neighbors, or the hall monitor.
 
 **Play:** https://archmod.github.io/angelinas-emergency/ (on iPhone: Share → *Add to Home Screen* for fullscreen)
 

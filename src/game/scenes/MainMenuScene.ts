@@ -5,6 +5,7 @@ import { TEX } from '@/game/art/AssetKeys';
 import type { DebugFlags } from '@/game/debug/flags';
 import type { SaveManager } from '@/game/systems/SaveManager';
 import { Button } from '@/game/ui/Button';
+import { Joshau } from '@/game/ui/Joshau';
 import { addMenuBackdrop } from '@/game/ui/MenuBackdrop';
 import { addSoundToggle } from '@/game/ui/SoundToggle';
 import { headingStyle, THEME, textStyle } from '@/game/ui/theme';
@@ -25,8 +26,14 @@ const TRAIL_ALPHA = 0.7;
 const TRAIL_TINT = 0xc48a52; // mud brown
 const TRAIL_SPACING = 62;
 
+/** What Joshau mutters when he pops up (in order, looping). */
+const JOSHAU_LINES = ['Hold on… was that a toot?', 'Angelina…? Where’d you sneak off to?', 'I KNOW you’re up to something.', 'One day I’ll catch you. One day.'];
+
 /** Title screen: poop + feet themed. Buttons are user gestures, which also unlocks audio on iOS. */
 export class MainMenuScene extends Phaser.Scene {
+  private feet: Phaser.GameObjects.Image[] = [];
+  private joshau!: Joshau;
+
   constructor() {
     super(SCENES.MAIN_MENU);
   }
@@ -43,6 +50,8 @@ export class MainMenuScene extends Phaser.Scene {
     this.addTrail();
     this.addFeet();
     this.addPoopMascot(1010, 462);
+    this.joshau = new Joshau(this, { x: 1175, bubble: 'left' });
+    this.gagLoop();
 
     // Title
     const title = this.add
@@ -51,14 +60,17 @@ export class MainMenuScene extends Phaser.Scene {
       .setAngle(-2)
       .setDepth(DEPTH.UI);
     this.tweens.add({ targets: title, scaleX: 1.025, scaleY: 1.025, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    this.add.text(cx, 222, 'Find a spot. Do the deed. Don’t get caught.', textStyle(26, THEME.colors.textDim)).setOrigin(0.5).setDepth(DEPTH.UI);
+    this.add
+      .text(cx, 232, 'She has to poop. And fart. A LOT. Nobody can ever know —\nleast of all her boyfriend Joshau, who is dying to catch her in the act.', textStyle(22, THEME.colors.textDim, { align: 'center', lineSpacing: 4 }))
+      .setOrigin(0.5)
+      .setDepth(DEPTH.UI);
 
     // Buttons
     const play = () => this.scene.start(SCENES.GAME, { levelId: continueId });
     const levels = () => this.scene.start(SCENES.LEVEL_SELECT);
     const P = MENU_LAYOUT.PLAY;
     const L = MENU_LAYOUT.LEVELS;
-    new Button(this, P.x, P.y, done > 0 && done < CAMPAIGN.length ? 'Continue' : 'Play', play, { width: P.w, height: P.h, fontSize: 30, toes: true });
+    new Button(this, P.x, P.y, done > 0 && done < CAMPAIGN.length ? 'Still gotta go!' : 'Gotta go!', play, { width: P.w, height: P.h, fontSize: 30, toes: true });
     new Button(this, L.x, L.y, `Levels  (${done}/${CAMPAIGN.length})`, levels, { width: L.w, height: L.h, color: THEME.button.poop, toes: true });
 
     // Footer
@@ -66,7 +78,7 @@ export class MainMenuScene extends Phaser.Scene {
       .text(cx, GAME_HEIGHT - 44, this.sys.game.device.input.touch ? 'Joystick: left side · GO / RUN: right side' : 'WASD / arrows move · Shift run · C sneak · Space/E = GO · Esc pause', textStyle(16, THEME.colors.textDim))
       .setOrigin(0.5)
       .setDepth(DEPTH.UI);
-    this.add.text(GAME_WIDTH - 16, GAME_HEIGHT - 12, `v${APP_VERSION}`, textStyle(16, THEME.colors.textDim)).setOrigin(1, 1).setDepth(DEPTH.UI);
+    this.add.text(16, 12, `v${APP_VERSION}`, textStyle(16, THEME.colors.textDim)).setDepth(DEPTH.UI);
     addSoundToggle(this, GAME_WIDTH - 96, 40);
 
     this.input.keyboard?.once('keydown-SPACE', play);
@@ -79,10 +91,42 @@ export class MainMenuScene extends Phaser.Scene {
     const scale = 0.72;
     const left = this.add.image(190, 738, TEX.MENU_FOOT).setOrigin(0.5, 0.94).setScale(scale).setAngle(-9).setDepth(DEPTH.FX);
     const right = this.add.image(318, 728, TEX.MENU_FOOT_SMEARED).setOrigin(0.5, 0.94).setScale(scale).setAngle(9).setDepth(DEPTH.FX);
+    this.feet = [left, right];
     // toe-tap: pivot about the heel (origin), lift, drop, pause
     this.tweens.add({ targets: right, angle: 20, y: '-=6', duration: 130, yoyo: true, repeat: -1, repeatDelay: 420, ease: 'Sine.easeInOut' });
     // the other foot shifts weight now and then
     this.tweens.add({ targets: left, angle: -6, duration: 900, yoyo: true, repeat: -1, repeatDelay: 1400, ease: 'Sine.easeInOut' });
+  }
+
+  /**
+   * The running gag: Angelina lets one slip now and then; Joshau pops up from below the edge, suspicious.
+   * A fixed little script that loops (delays in ms from the start of each cycle).
+   */
+  private gagLoop(): void {
+    const script: Array<[number, () => void]> = [
+      [1800, () => this.fart()],
+      [2500, () => this.joshau.peek(JOSHAU_LINES[0]!)],
+      [7600, () => this.joshau.peek(JOSHAU_LINES[1]!)],
+      [12400, () => this.fart()],
+      [13000, () => this.fart()],
+      [13700, () => this.joshau.peek(JOSHAU_LINES[2]!)],
+      [19200, () => this.joshau.peek(JOSHAU_LINES[3]!)],
+    ];
+    for (const [t, fn] of script) this.time.delayedCall(t, fn);
+    this.time.delayedCall(24500, () => this.gagLoop());
+  }
+
+  /** A little green puff and a "pfft…" drift up from between her feet; the feet do a guilty shuffle. */
+  private fart(): void {
+    const x = 262;
+    const y = 640;
+    const puff = this.add.image(x, y, TEX.STINK).setScale(1.4).setAlpha(0).setDepth(DEPTH.FX + 1);
+    const label = this.add.text(x + 30, y - 6, 'pfft…', textStyle(18, THEME.colors.ok, { fontStyle: 'italic' })).setOrigin(0.5).setAlpha(0).setDepth(DEPTH.FX + 1);
+    this.tweens.add({ targets: [puff, label], y: '-=70', duration: 1500, ease: 'Sine.easeOut', onComplete: () => { puff.destroy(); label.destroy(); } });
+    this.tweens.add({ targets: [puff, label], alpha: { from: 0.95, to: 0 }, duration: 1500, ease: 'Quad.easeIn' });
+    this.tweens.add({ targets: puff, scale: 2.4, duration: 1500 });
+    // guilty shuffle: both feet twitch sideways a few times
+    this.tweens.add({ targets: this.feet, x: '+=4', duration: 60, yoyo: true, repeat: 3, ease: 'Sine.easeInOut' });
   }
 
   /** Big cheeky poop mascot with rising stink wiggles, gently bobbing. */

@@ -420,3 +420,64 @@ export function drawFrogFoot(ctx: Ctx, ox: number, oy: number, w: number, h: num
     ellipse(ctx, sx - 8 * k, sy - 5 * k, 6 * k, 3 * k, 'rgba(255,255,255,0.28)', { rotation: -0.5 });
   }
 }
+
+/**
+ * Joshau — Angelina's boyfriend, front view, peeking up over an edge (fingers gripping it) with a raised eyebrow and a
+ * smirk. In a w×h box (default 200×150 proportions); the "edge" he grips is at 83% of the height so the scene can hide
+ * everything below it off-screen. Eyes look to the left (toward Angelina).
+ */
+export function drawJoshau(ctx: Ctx, ox: number, oy: number, w: number, h: number): void {
+  const k = Math.min(w / 200, h / 150);
+  const cx = ox + w / 2;
+  const skin = '#f1c27d';
+  const skinDark = '#a9773f';
+  const hair = '#4a3222';
+  const edge = oy + 124 * k;
+  // head
+  circle(ctx, cx, oy + 82 * k, 50 * k, shade(ctx, cx, oy + 82 * k, 50 * k, '#f8d9a4', skin), { stroke: skinDark, lineWidth: 3 * k });
+  // ears
+  circle(ctx, cx - 50 * k, oy + 88 * k, 9 * k, skin, { stroke: skinDark, lineWidth: 2.5 * k });
+  circle(ctx, cx + 50 * k, oy + 88 * k, 9 * k, skin, { stroke: skinDark, lineWidth: 2.5 * k });
+  // short spiky brown hair
+  ctx.beginPath();
+  ctx.moveTo(cx - 52 * k, oy + 62 * k);
+  ctx.quadraticCurveTo(cx - 54 * k, oy + 30 * k, cx - 30 * k, oy + 30 * k);
+  for (const [x, y] of [
+    [-38, 14],
+    [-20, 30],
+    [-8, 10],
+    [8, 30],
+    [22, 12],
+    [34, 30],
+    [46, 22],
+  ] as const) {
+    ctx.lineTo(cx + x * k, oy + y * k);
+  }
+  ctx.quadraticCurveTo(cx + 54 * k, oy + 40 * k, cx + 52 * k, oy + 62 * k);
+  ctx.quadraticCurveTo(cx, oy + 40 * k, cx - 52 * k, oy + 62 * k);
+  ctx.closePath();
+  ctx.fillStyle = shade(ctx, cx - 10 * k, oy + 36 * k, 60 * k, '#7a4f2e', hair);
+  ctx.fill();
+  ctx.lineWidth = 3 * k;
+  ctx.strokeStyle = tint(hair, 0.6);
+  ctx.stroke();
+  // eyes: big, pupils sliding left (toward Angelina), one eyebrow arched high, the other pressed down = suspicious
+  eye(ctx, cx - 20 * k, oy + 84 * k, 12 * k, skinDark, -5 * k);
+  eye(ctx, cx + 20 * k, oy + 84 * k, 12 * k, skinDark, -5 * k);
+  line(ctx, cx - 36 * k, oy + 60 * k, cx - 6 * k, oy + 66 * k, hair, 5 * k);
+  line(ctx, cx + 6 * k, oy + 74 * k, cx + 36 * k, oy + 70 * k, hair, 5 * k);
+  // nose + smirk
+  arc(ctx, cx + 2 * k, oy + 96 * k, 5 * k, Math.PI * 0.1, Math.PI * 0.9, skinDark, 2.5 * k);
+  ctx.beginPath();
+  ctx.moveTo(cx - 12 * k, oy + 112 * k);
+  ctx.quadraticCurveTo(cx + 4 * k, oy + 120 * k, cx + 16 * k, oy + 108 * k);
+  ctx.strokeStyle = skinDark;
+  ctx.lineWidth = 3 * k;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+  // hands gripping the edge (fingers curl over it)
+  for (const hx of [cx - 62 * k, cx + 62 * k]) {
+    ellipse(ctx, hx, edge + 6 * k, 20 * k, 14 * k, skin, { stroke: skinDark, lineWidth: 2.5 * k });
+    for (const dx of [-13, -4, 5, 14]) circle(ctx, hx + dx * k, edge - 4 * k, 6 * k, skin, { stroke: skinDark, lineWidth: 2 * k });
+  }
+}

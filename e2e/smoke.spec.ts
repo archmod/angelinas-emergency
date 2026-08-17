@@ -194,7 +194,7 @@ test('an enemy that sees Angelina chases and catches her → lose screen → ret
     const r = (window as unknown as { __game: { scene: { getScene(k: string): { children: { list: { text?: string }[] } } } } }).__game.scene.getScene('Result');
     return r.children.list.map((c) => c.text).filter(Boolean);
   });
-  expect(resultTitle.join(' ')).toContain('Caught!');
+  expect(resultTitle.join(' ')).toContain('Busted!');
   await page.keyboard.press('Space');
   await waitForScene(page, 'Game');
   await page.waitForFunction(
@@ -246,7 +246,7 @@ test('hold GO on a spot to poop, then reach the exit to win', async ({ page, isM
     const r = (window as unknown as { __game: { scene: { getScene(k: string): { children: { list: { text?: string }[] } } } } }).__game.scene.getScene('Result');
     return r.children.list.map((c) => c.text).filter(Boolean).join(' ');
   });
-  expect(texts).toContain('Relief!');
+  expect(texts).toContain('Sweet relief!');
   expect(errors.filter((e) => !e.includes('GPU stall')), errors.join('\n')).toEqual([]);
 });
 

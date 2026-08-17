@@ -17,6 +17,7 @@ export const TEX = {
   MENU_FOOT: 'menu-foot',
   MENU_FOOT_SMEARED: 'menu-foot-smeared',
   MENU_POOP: 'menu-poop',
+  MENU_JOSHAU: 'menu-joshau',
 } as const;
 export type TextureKey = (typeof TEX)[keyof typeof TEX];
 
@@ -41,6 +42,10 @@ export const MENU_ART = {
   FOOT_W: 160,
   FOOT_H: 220,
   POOP: 256,
+  JOSHAU_W: 200,
+  JOSHAU_H: 150,
+  /** Y (in JOSHAU_H px) of the edge Joshau grips; everything below it sits off-screen when he peeks. */
+  JOSHAU_EDGE: 124,
 } as const;
 
 /** Name of the tileset inside the (blank/procedural) tilemap. Must match what LevelLoader passes to addTilesetImage. */

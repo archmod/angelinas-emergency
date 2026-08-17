@@ -3,7 +3,7 @@ import { ENEMY_DEFS } from '@/config/enemies';
 import { TILE_KIND_COUNT, TILE_SIZE } from '@/config/tiles';
 import { MENU_ART, SPOT_TEXTURE_SIZE, TEX, enemyTexture, walkAnim } from './AssetKeys';
 import { circle, rng, type Ctx } from './canvas';
-import { drawAngelina, drawCamera, drawDog, drawFootprint, drawFrogFoot, drawPerson, drawPoop, drawSpot, drawStink, FRAME, WALK_FRAMES, type PersonLook } from './sprites';
+import { drawAngelina, drawCamera, drawDog, drawFootprint, drawFrogFoot, drawJoshau, drawPerson, drawPoop, drawSpot, drawStink, FRAME, WALK_FRAMES, type PersonLook } from './sprites';
 import { drawTileset } from './tiles';
 
 /** Distinct looks per enemy archetype (see config/enemies.ts). */
@@ -118,6 +118,7 @@ function generateMenuArt(scene: Phaser.Scene): void {
   canvasTexture(scene, TEX.MENU_FOOT, M.FOOT_W, M.FOOT_H, (ctx) => drawFrogFoot(ctx, 0, 0, M.FOOT_W, M.FOOT_H));
   canvasTexture(scene, TEX.MENU_FOOT_SMEARED, M.FOOT_W, M.FOOT_H, (ctx) => drawFrogFoot(ctx, 0, 0, M.FOOT_W, M.FOOT_H, { smear: true }));
   canvasTexture(scene, TEX.MENU_POOP, M.POOP, M.POOP, (ctx) => drawPoop(ctx, 0, 0, { size: M.POOP }));
+  canvasTexture(scene, TEX.MENU_JOSHAU, M.JOSHAU_W, M.JOSHAU_H, (ctx) => drawJoshau(ctx, 0, 0, M.JOSHAU_W, M.JOSHAU_H));
 }
 
 function canvasTexture(scene: Phaser.Scene, key: string, w: number, h: number, draw: (ctx: Ctx) => void): Phaser.Textures.CanvasTexture {

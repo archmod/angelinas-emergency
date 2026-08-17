@@ -18,7 +18,7 @@ export interface HudSceneData {
 }
 
 const ALERT_RANK: Record<BrainMode, number> = { patrol: 0, return: 0, suspicious: 1, search: 1, chase: 2 };
-const ALERT_LABEL = ['UNSEEN', 'SUSPICIOUS', 'SPOTTED!'] as const;
+const ALERT_LABEL = ['NOBODY KNOWS', 'SUSPICIOUS…', 'SPOTTED!'] as const;
 const METER_W = 260;
 const METER_H = 18;
 
@@ -52,7 +52,7 @@ export class HudScene extends Phaser.Scene {
     // Top-left: urgency meter with a poop icon.
     this.add.image(28, 26, TEX.POOP).setScale(0.6);
     this.meter = this.add.graphics();
-    this.add.text(50, 40, 'URGENCY', textStyle(12, THEME.colors.textDim));
+    this.add.text(50, 40, 'GOTTA GO', textStyle(12, THEME.colors.textDim));
 
     // Top-center: level name + objective hint + poop counter.
     this.add.text(GAME_WIDTH / 2, 10, data.levelName, textStyle(20, THEME.colors.textDim)).setOrigin(0.5, 0);
@@ -60,7 +60,7 @@ export class HudScene extends Phaser.Scene {
     this.countText = this.add.text(GAME_WIDTH / 2, 62, '', textStyle(18, THEME.colors.warn)).setOrigin(0.5, 0);
 
     // Top-right: alert state + pause button.
-    this.alertText = this.add.text(GAME_WIDTH - 84, 16, 'UNSEEN', textStyle(22, THEME.colors.ok, { fontStyle: 'bold' })).setOrigin(1, 0);
+    this.alertText = this.add.text(GAME_WIDTH - 84, 16, ALERT_LABEL[0], textStyle(22, THEME.colors.ok, { fontStyle: 'bold' })).setOrigin(1, 0);
     const pauseBtn = this.add
       .image(GAME_WIDTH - 44, 30, TEX.BUTTON)
       .setDisplaySize(52, 52)
@@ -91,11 +91,11 @@ export class HudScene extends Phaser.Scene {
     const bg = this.add.graphics();
     bg.fillStyle(0x000000, 0.7);
     bg.fillRoundedRect(cx - 320, cy - 110, 640, 220, 18);
-    const title = this.add.text(cx, cy - 60, name, textStyle(40, THEME.colors.accent, { fontStyle: 'bold' })).setOrigin(0.5);
-    const obj = this.add.text(cx, cy, objective, textStyle(24, THEME.colors.text)).setOrigin(0.5);
-    const controls = this.touch ? 'Left thumb: move · GO: hold to poop · RUN: sprint (noisy!)' : 'WASD move · hold Space to poop · Shift run (noisy!) · C sneak';
+    const title = this.add.text(cx, cy - 72, name, textStyle(40, THEME.colors.accent, { fontStyle: 'bold' })).setOrigin(0.5);
+    const obj = this.add.text(cx, cy - 14, objective, textStyle(22, THEME.colors.text, { align: 'center', wordWrap: { width: 590 } })).setOrigin(0.5);
+    const controls = this.touch ? 'Left thumb: move · GO: hold to let it out · RUN: sprint (noisy!)' : 'WASD move · hold Space to let it out · Shift run (noisy!) · C sneak';
     const hint = this.add.text(cx, cy + 50, controls, textStyle(18, THEME.colors.textDim)).setOrigin(0.5);
-    const go = this.add.text(cx, cy + 86, 'Move to start', textStyle(16, THEME.colors.warn)).setOrigin(0.5);
+    const go = this.add.text(cx, cy + 86, 'Move to sneak off', textStyle(16, THEME.colors.warn)).setOrigin(0.5);
     this.intro = this.add.container(0, 0, [bg, title, obj, hint, go]);
     this.introAge = 0;
   }
