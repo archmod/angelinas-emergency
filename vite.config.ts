@@ -31,7 +31,7 @@ export default defineConfig({
         id: base,
         name: "Angelina's Emergency",
         short_name: 'Angelina',
-        description: 'A sneaky top-down stealth game. Angelina has to poop (and fart) a lot, and nobody can ever know - least of all her boyfriend Joshau, who is always trying to catch her in the act.',
+        description: 'A sneaky top-down stealth game. Angelina has to poop (and fart) a lot, and nobody can ever know - least of all Joshau, who is always trying to catch her in the act.',
         start_url: base,
         scope: base,
         display: 'standalone',

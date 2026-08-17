@@ -61,7 +61,7 @@ export class MainMenuScene extends Phaser.Scene {
       .setDepth(DEPTH.UI);
     this.tweens.add({ targets: title, scaleX: 1.025, scaleY: 1.025, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     this.add
-      .text(cx, 232, 'She has to poop. And fart. A LOT. Nobody can ever know —\nleast of all her boyfriend Joshau, who is dying to catch her in the act.', textStyle(22, THEME.colors.textDim, { align: 'center', lineSpacing: 4 }))
+      .text(cx, 232, 'She has to poop. And fart. A LOT. Nobody can ever know —\nleast of all Joshau, who is dying to catch her in the act.', textStyle(22, THEME.colors.textDim, { align: 'center', lineSpacing: 4 }))
       .setOrigin(0.5)
       .setDepth(DEPTH.UI);
 
