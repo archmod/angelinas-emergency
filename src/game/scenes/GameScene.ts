@@ -2,66 +2,121 @@ import Phaser from 'phaser';
 import { DEPTH, REGISTRY, SCENES } from '@/config/constants';
 import type { Rect } from '@/core/level/schema';
 import { TEX } from '@/game/art/AssetKeys';
+import { DebugOverlay } from '@/game/debug/DebugOverlay';
+import type { DebugFlags } from '@/game/debug/flags';
+import { Enemy, type PlayerSnapshot } from '@/game/entities/Enemy';
 import { Player } from '@/game/entities/Player';
 import { InputManager } from '@/game/input/InputManager';
 import { KeyboardSource } from '@/game/input/KeyboardSource';
 import { setupCamera } from '@/game/systems/CameraRig';
+import { DetectionSystem } from '@/game/systems/DetectionSystem';
+import { EventBus } from '@/game/systems/EventBus';
 import { buildLevel, type BuiltLevel } from '@/game/systems/LevelLoader';
+import { NavSystem } from '@/game/systems/NavSystem';
+import { NoiseSystem } from '@/game/systems/NoiseSystem';
+import { VisionConeRenderer } from '@/game/systems/VisionConeRenderer';
 import { DEFAULT_LEVEL_ID, getLevel } from '@/levels/registry';
 
 export interface GameSceneData {
   levelId?: string;
 }
 
-/** The level scene: builds the map, owns the player, systems and per-frame update order. */
+/** The level scene: builds the map, owns the player, enemies, systems and the per-frame update order. */
 export class GameScene extends Phaser.Scene {
-  private level!: BuiltLevel;
-  private player!: Player;
+  level!: BuiltLevel;
+  player!: Player;
+  enemies: Enemy[] = [];
+  bus!: EventBus;
   private inputManager!: InputManager;
+  private nav!: NavSystem;
+  private noise!: NoiseSystem;
+  private detection!: DetectionSystem;
+  private cones!: VisionConeRenderer;
+  private debug!: DebugOverlay;
+  private flags!: DebugFlags;
+  private ended = false;
 
   constructor() {
     super(SCENES.GAME);
   }
 
   create(data: GameSceneData): void {
-    const debug = this.registry.get(REGISTRY.DEBUG_FLAGS) as { level?: string | null } | undefined;
-    const levelId = data.levelId ?? debug?.level ?? DEFAULT_LEVEL_ID;
+    this.ended = false;
+    this.flags = this.registry.get(REGISTRY.DEBUG_FLAGS) as DebugFlags;
+    const levelId = data.levelId ?? this.flags.level ?? DEFAULT_LEVEL_ID;
     const entry = getLevel(levelId);
     const levelData = entry.load();
 
+    this.bus = new EventBus();
     this.level = buildLevel(this, levelData);
+    this.nav = new NavSystem(this.level.grid);
+    this.noise = new NoiseSystem(this.bus);
     this.drawZones();
 
     const spawn = levelData.playerSpawn;
     this.player = new Player(this, spawn.x, spawn.y, this.level.grid);
+    this.player.onNoise = (e) => this.noise.emit(e);
     this.physics.add.collider(this.player, this.level.walls);
+
+    this.enemies = levelData.enemies.map((s) => new Enemy(this, s, this.nav, this.bus, this.noise));
+    this.physics.add.collider(this.enemies, this.level.walls);
+    this.physics.add.collider(this.enemies, this.enemies);
+
+    this.detection = new DetectionSystem(this.level.grid, () => this.enemies);
+    this.cones = new VisionConeRenderer(this, this.level.grid, () => this.enemies);
+    this.debug = new DebugOverlay(this, this.flags, this.level.grid, () => this.enemies, this.noise);
 
     this.inputManager = new InputManager();
     this.inputManager.addSource(new KeyboardSource(this));
-    this.scene.launch(SCENES.HUD, { input: this.inputManager, levelName: entry.name });
+    this.scene.launch(SCENES.HUD, { input: this.inputManager, levelName: entry.name, bus: this.bus });
 
     setupCamera(this, this.player, this.level.worldWidth, this.level.worldHeight);
+
+    this.bus.on('player:caught', () => this.onCaught());
+    this.input.keyboard?.on('keydown-R', () => this.scene.restart());
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scene.stop(SCENES.HUD);
       this.inputManager.destroy();
+      this.bus.destroy();
+      this.enemies = [];
     });
   }
 
   private drawZones(): void {
     const { poopSpots, exit } = this.level.data;
-    const rect = (r: Rect, key: string) =>
-      this.add
-        .tileSprite(r.x + r.w / 2, r.y + r.h / 2, r.w, r.h, key)
-        .setDepth(DEPTH.SPOTS);
+    const rect = (r: Rect, key: string) => this.add.tileSprite(r.x + r.w / 2, r.y + r.h / 2, r.w, r.h, key).setDepth(DEPTH.SPOTS);
     for (const s of poopSpots) rect(s.rect, s.cover === 'hidden' ? TEX.SPOT_HIDDEN : TEX.SPOT_EXPOSED);
     if (exit) rect(exit, TEX.EXIT);
+  }
+
+  private onCaught(): void {
+    if (this.ended || this.flags.god) return;
+    this.ended = true;
+    this.player.frozen = true;
+    this.cameras.main.shake(250, 0.01);
+    this.cameras.main.flash(300, 255, 60, 60);
+    this.bus.emit('level:lost', { reason: 'caught' });
+    this.time.delayedCall(1200, () => this.scene.restart());
   }
 
   override update(_time: number, deltaMs: number): void {
     const dt = Math.min(deltaMs, 50) / 1000;
     const intent = this.inputManager.update();
     this.player.update(intent, dt);
+
+    const snapshot: PlayerSnapshot = {
+      pos: { x: this.player.x, y: this.player.y },
+      hidden: this.player.hidden || this.flags.god,
+      stanceMul: this.player.stanceMul,
+    };
+    const noises = this.noise.drain();
+    this.detection.update(dt, snapshot, noises);
+    this.noise.update(dt);
+    if (!this.ended) for (const e of this.enemies) e.tick(dt, snapshot);
+    this.cones.update(dt);
+    this.debug.update();
+
     if (intent.pausePressed) this.scene.start(SCENES.MAIN_MENU); // temporary until PauseScene (M3)
   }
 }

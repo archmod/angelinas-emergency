@@ -77,3 +77,45 @@ test('keyboard moves Angelina and bushes hide her', async ({ page, isMobile }) =
 
   expect(errors.filter((e) => !e.includes('GPU stall')), errors.join('\n')).toEqual([]);
 });
+
+test('an enemy that sees Angelina chases and catches her, then the level restarts', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'uses keyboard to start');
+  const errors = collectErrors(page);
+  await page.goto('/?debug=1');
+  await waitForScene(page, 'MainMenu');
+  await page.keyboard.press('Space');
+  await waitForScene(page, 'Game');
+  await page.waitForTimeout(300);
+
+  type Snap = { px: number; py: number; mode: string; awareness: number; ex: number; ey: number };
+  const snap = () =>
+    page.evaluate((): Snap => {
+      const s = (window as unknown as { __game: { scene: { getScene(k: string): { player: { x: number; y: number }; enemies: { mode: string; awareness: number; x: number; y: number }[] } } } }).__game.scene.getScene('Game');
+      const e = s.enemies[0]!;
+      return { px: s.player.x, py: s.player.y, mode: e.mode, awareness: e.awareness, ex: e.x, ey: e.y };
+    });
+  const before = await snap();
+  expect(before.mode).toBe('patrol');
+
+  // Drop Angelina 3 tiles directly in front of the ranger's current facing.
+  await page.evaluate(() => {
+    const s = (window as unknown as { __game: { scene: { getScene(k: string): { player: { setPosition(x: number, y: number): void }; enemies: { x: number; y: number; facing: number }[] } } } }).__game.scene.getScene('Game');
+    const e = s.enemies[0]!;
+    s.player.setPosition(e.x + Math.cos(e.facing) * 96, e.y + Math.sin(e.facing) * 96);
+  });
+  await page.waitForFunction(
+    () => (window as unknown as { __game: { scene: { getScene(k: string): { enemies: { mode: string }[] } } } }).__game.scene.getScene('Game').enemies[0]!.mode === 'chase',
+    null,
+    { timeout: 6000 },
+  );
+  // Caught → restart puts her back at the spawn point.
+  await page.waitForFunction(
+    (spawn) => {
+      const s = (window as unknown as { __game: { scene: { getScene(k: string): { player: { x: number; y: number }; enemies: { mode: string }[] } } } }).__game.scene.getScene('Game');
+      return Math.abs(s.player.x - spawn.px) < 2 && Math.abs(s.player.y - spawn.py) < 2 && s.enemies[0]!.mode === 'patrol';
+    },
+    { px: before.px, py: before.py },
+    { timeout: 8000 },
+  );
+  expect(errors.filter((e) => !e.includes('GPU stall')), errors.join('\n')).toEqual([]);
+});
