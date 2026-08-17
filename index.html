@@ -2,11 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <!-- iOS Safari ignores user-scalable=no; the real zoom/scroll prevention lives in styles.css + platform/ios.ts -->
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
-    />
+    <!-- Zoom/scroll prevention lives in styles.css (touch-action) + platform/ios.ts (gesture guards). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -19,7 +16,7 @@
   </head>
   <body>
     <div id="game"></div>
-    <div id="rotate-overlay" role="dialog" aria-live="polite">
+    <div id="rotate-overlay" role="dialog" aria-label="Rotate your device" aria-live="polite">
       <div class="rotate-card">
         <div class="rotate-icon" aria-hidden="true">📱</div>
         <p>Please rotate your device to landscape</p>

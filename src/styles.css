@@ -36,6 +36,21 @@ body {
   image-rendering: auto;
 }
 
+/* Instant first paint while the engine bundle downloads; hidden once the canvas exists. */
+#game::before {
+  content: 'Loading…';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a9a6a0;
+  font-size: 20px;
+}
+#game:has(canvas)::before {
+  display: none;
+}
+
 /* Rotate-your-device overlay: shown by JS (portrait + touch device); the media query is a no-JS fallback. */
 #rotate-overlay {
   position: fixed;
