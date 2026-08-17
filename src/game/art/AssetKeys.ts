@@ -7,6 +7,8 @@ export const TEX = {
   PUFF: 'puff',
   SPOT_HIDDEN: 'spot-hidden',
   SPOT_EXPOSED: 'spot-exposed',
+  SPOT_PIN: 'spot-pin',
+  SPOT_DONE: 'spot-done',
   EXIT: 'exit',
   JOYSTICK_BASE: 'ui-joystick-base',
   JOYSTICK_THUMB: 'ui-joystick-thumb',
@@ -34,6 +36,10 @@ export const CHARACTER_SCALE = 0.5;
 
 /** Spot/exit marker textures are drawn at 2× (one marker = one grid tile); tileSprites need this tile scale. */
 export const SPOT_TEXTURE_SIZE = 64;
+/** Objective pin (bobs above required spots) and the "done" badge that replaces it. */
+export const SPOT_PIN_W = 40;
+export const SPOT_PIN_H = 52;
+export const SPOT_DONE_SIZE = 36;
 
 /** Source sizes of the menu textures (the scenes scale them). */
 export const MENU_ART = {

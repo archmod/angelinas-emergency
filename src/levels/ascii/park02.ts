@@ -1,9 +1,9 @@
 import type { AsciiLevelDef } from '@/core/level/asciiLevel';
 
 /**
- * Park 2 — "Picnic Panic". Two poops needed. A bench lady scans the lawn (the hidden spot under her
- * nose is a trap if you're noisy), a ranger patrols the middle, a dog with sharp ears guards the exit
- * approach and a jogger laps the bottom.
+ * Park 2 — "Picnic Panic". Two pinned spots, one poop each. A bench lady scans the lawn (the hidden spot
+ * under her nose is a trap if you're noisy), a ranger patrols the middle, a dog with sharp ears guards the
+ * exit approach and a jogger laps the bottom.
  */
 export const PARK_02: AsciiLevelDef = {
   meta: { id: 'park-02', world: 'park', name: 'Picnic Panic', parSeconds: 120, urgencySeconds: 150 },
@@ -41,5 +41,5 @@ export const PARK_02: AsciiLevelDef = {
     { kind: 'dog', patrol: 'mn', mode: 'pingpong' },
     { kind: 'jogger', patrol: 'efgh', mode: 'loop' },
   ],
-  rules: { requiredPoops: 2, exitRequired: true },
+  rules: { exitRequired: true },
 };

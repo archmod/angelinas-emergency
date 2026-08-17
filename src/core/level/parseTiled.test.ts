@@ -48,8 +48,8 @@ describe('parseTiledMap', () => {
     expect(cam!.pos).toEqual({ x: 144, y: 48 });
     expect(cam!.scanDeg).toEqual([90, 180]);
     expect(lvl.poopSpots).toHaveLength(2);
-    expect(lvl.poopSpots[0]).toMatchObject({ cover: 'hidden', rect: { x: 32, y: 96, w: 32, h: 32 }, durationMultiplier: 1 });
-    expect(lvl.poopSpots[1]).toMatchObject({ cover: 'exposed', durationMultiplier: 0.5 });
+    expect(lvl.poopSpots[0]).toMatchObject({ cover: 'hidden', rect: { x: 32, y: 96, w: 32, h: 32 }, durationMultiplier: 1, required: true });
+    expect(lvl.poopSpots[1]).toMatchObject({ cover: 'exposed', durationMultiplier: 0.5, required: false });
     expect(grid.isHiding(1, 3)).toBe(true); // hidden spot rasterized to HIDE
     expect(lvl.exit).toEqual({ x: 128, y: 32, w: 32, h: 32 });
   });
@@ -58,7 +58,7 @@ describe('parseTiledMap', () => {
     expect(lvl.meta.name).toBe('Fixture Park');
     expect(lvl.meta.parSeconds).toBe(45);
     expect(lvl.meta.urgencySeconds).toBe(90); // from registry meta (not in map)
-    expect(lvl.rules).toEqual({ requiredPoops: 2, exitRequired: true });
+    expect(lvl.rules).toEqual({ exitRequired: true });
   });
 
   it('rejects unsupported maps', () => {
@@ -69,5 +69,8 @@ describe('parseTiledMap', () => {
     const enemies = badPatrol.layers.find((l) => l.name === 'enemies')!.objects!;
     enemies[0]!.properties!.find((p) => p.name === 'patrol')!.value = 'nope';
     expect(() => parseTiledMap(badPatrol, meta)).toThrow(/unknown patrol/);
+    const noRequired = JSON.parse(JSON.stringify(fixture)) as TiledMap;
+    for (const o of noRequired.layers.find((l) => l.name === 'spots')!.objects!) o.properties = [{ name: 'required', type: 'bool', value: false }];
+    expect(() => parseTiledMap(noRequired, meta)).toThrow(/at least one required poop spot/);
   });
 });

@@ -3,7 +3,7 @@ import type { AsciiLevelDef } from '@/core/level/asciiLevel';
 /**
  * School 1 — "Hall Pass". Indoors: lockers along the corridors are hiding spots, teachers watch
  * their classroom doors, a hall monitor sprints the middle corridor and a camera covers the exit
- * corridor. The bathroom stall is the hidden spot; the exposed spot is… the middle of the room.
+ * corridor. The bathroom stall is the pinned spot; the optional exposed one is… the middle of the room.
  */
 export const SCHOOL_01: AsciiLevelDef = {
   meta: { id: 'school-01', world: 'school', name: 'Hall Pass', parSeconds: 90, urgencySeconds: 120 },
@@ -22,7 +22,7 @@ export const SCHOOL_01: AsciiLevelDef = {
     '#___________________________________________#',
     '#_____###_###____###_###____###_#####_______#',
     '#_____#_____#____#_____#____#___S___#_______#',
-    '#_____#__j__#____#_____#____#___$___#_______#',
+    '#_____#__j__#____#_____#____#___%___#_______#',
     '#_____#_____#____#_____#____#########_______#',
     '#L__________________________________________#',
     '#L_______d____________________________e_____#',
@@ -37,5 +37,5 @@ export const SCHOOL_01: AsciiLevelDef = {
     { kind: 'teacher', at: 'j', scanDeg: [-120, -60] },
     { kind: 'camera', at: 'c', scanDeg: [120, 240] },
   ],
-  rules: { requiredPoops: 1, exitRequired: true },
+  rules: { exitRequired: true },
 };

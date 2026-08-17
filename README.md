@@ -1,8 +1,9 @@
 # Angelina's Emergency
 
 A 2D top-down stealth game for the browser — desktop and iPhone (Safari). Angelina has to poop (and fart) a lot, and nobody
-can ever know — least of all Joshau, who is always trying to catch her in the act. Sneak to a private spot,
-hold GO to let it out, and don't get spotted by the park ranger, the nosy neighbors, or the hall monitor.
+can ever know — least of all Joshau, who is always trying to catch her in the act. Sneak to every pinned spot,
+hold GO to let it out (one go per spot — twice in the same place would be too obvious), and don't get spotted by the
+park ranger, the nosy neighbors, or the hall monitor. Un-pinned spots are optional relief when the meter gets scary.
 
 **Play:** https://archmod.github.io/angelinas-emergency/ (on iPhone: Share → *Add to Home Screen* for fullscreen)
 
@@ -38,7 +39,7 @@ Debug: append `?debug=1` (on-device eruda console + `` ` ``/F1 overlay, F2 heari
 ## Levels
 
 Levels are ASCII text in `src/levels/ascii/*.ts` (see the legend in `src/core/level/asciiLevel.ts`) and are validated by
-`npm test` (rectangular, every spot reachable, every patrol connected). Tiled `.tmj` maps are also supported
+`npm test` (rectangular, at least one required spot, every spot reachable, every patrol connected). Tiled `.tmj` maps are also supported
 (`src/core/level/parseTiled.ts`; `npm run gen:tiles` writes a placeholder tileset for Tiled).
 
 ## Deploy

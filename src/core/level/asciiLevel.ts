@@ -20,10 +20,14 @@ import {
  *   #  wall          .  grass         ,  path          _  floor (indoor)
  *   =  fence         ~  water         T  tree          B  bush (hides, blocks sight, walkable)
  *   L  locker (hides, blocks sight, walkable)
- *   P  player spawn  X  exit zone     S  poop spot (hidden cover)   $  poop spot (exposed)
+ *   P  player spawn  X  exit zone
+ *   S  required poop spot (hidden cover)   $  required poop spot (exposed)
+ *   ?  optional poop spot (hidden cover)   %  optional poop spot (exposed)
  *   a-z  named waypoint markers referenced by `enemies[].patrol` / `enemies[].at`
  *   ' ' (space) void: not part of the map (solid + opaque, not drawn)
- * Ground under P/X/S/$/markers/B/L is `defaultGround` (grass unless set).
+ * Ground under P/X/spots/markers/B/L is `defaultGround` (grass unless set).
+ * Spots are single-use. Every required spot (S/$) must be pooped in to open the exit — a level needs at least one;
+ * optional spots (?/%) are bonus relief that doesn't count. Adjacent same-symbol cells merge into one spot.
  */
 export interface AsciiEnemyDef {
   kind: string;
@@ -71,6 +75,16 @@ const CELLS: Record<string, CellSpec> = {
   X: { ground: 'default' },
   S: { ground: 'default', extraFlags: TileFlag.HIDE },
   $: { ground: 'default' },
+  '?': { ground: 'default', extraFlags: TileFlag.HIDE },
+  '%': { ground: 'default' },
+};
+
+/** Poop-spot symbols → cover + whether the spot is one of the level's objectives. */
+const SPOT_SYMBOLS: Record<string, { cover: PoopSpotDef['cover']; required: boolean }> = {
+  S: { cover: 'hidden', required: true },
+  $: { cover: 'exposed', required: true },
+  '?': { cover: 'hidden', required: false },
+  '%': { cover: 'exposed', required: false },
 };
 
 const isMarker = (ch: string): boolean => ch >= 'a' && ch <= 'z';
@@ -130,8 +144,7 @@ export function parseAsciiLevel(def: AsciiLevelDef, tileSize: number = TILE_SIZE
 
   const markers = new Map<string, Vec2>(); // tile coords
   const exitCells = new Set<number>();
-  const hiddenSpotCells = new Set<number>();
-  const exposedSpotCells = new Set<number>();
+  const spotCells = new Map<string, Set<number>>(); // spot symbol → cells
   let playerTile: Vec2 | null = null;
 
   const toWorld = (tx: number, ty: number): Vec2 => ({ x: (tx + 0.5) * tileSize, y: (ty + 0.5) * tileSize });
@@ -165,8 +178,10 @@ export function parseAsciiLevel(def: AsciiLevelDef, tileSize: number = TILE_SIZE
         playerTile = { x: tx, y: ty };
       }
       if (ch === 'X') exitCells.add(idx);
-      if (ch === 'S') hiddenSpotCells.add(idx);
-      if (ch === '$') exposedSpotCells.add(idx);
+      if (ch in SPOT_SYMBOLS) {
+        if (!spotCells.has(ch)) spotCells.set(ch, new Set());
+        spotCells.get(ch)!.add(idx);
+      }
 
       let f = spec.extraFlags ?? 0;
       if (spec.ground !== undefined) ground[idx] = spec.ground === 'default' ? defaultGround : spec.ground;
@@ -214,20 +229,16 @@ export function parseAsciiLevel(def: AsciiLevelDef, tileSize: number = TILE_SIZE
     return spawn;
   });
 
-  const poopSpots: PoopSpotDef[] = [
-    ...groupCells(hiddenSpotCells, width).map((r, i) => ({
-      id: `spot-hidden-${i}`,
-      rect: rectToWorld(r),
-      cover: 'hidden' as const,
-      durationMultiplier: 1,
-    })),
-    ...groupCells(exposedSpotCells, width).map((r, i) => ({
-      id: `spot-exposed-${i}`,
-      rect: rectToWorld(r),
-      cover: 'exposed' as const,
-      durationMultiplier: 0.7,
-    })),
-  ];
+  // Required spots first (hidden, then exposed), then optional ones; ids number each cover kind in that order.
+  const poopSpots: PoopSpotDef[] = [];
+  const spotIndex = { hidden: 0, exposed: 0 };
+  for (const symbol of ['S', '$', '?', '%']) {
+    const { cover, required } = SPOT_SYMBOLS[symbol]!;
+    for (const r of groupCells(spotCells.get(symbol) ?? new Set(), width)) {
+      poopSpots.push({ id: `spot-${cover}-${spotIndex[cover]++}`, rect: rectToWorld(r), cover, durationMultiplier: cover === 'hidden' ? 1 : 0.7, required });
+    }
+  }
+  if (!poopSpots.some((s) => s.required)) throw new LevelParseError(`${def.meta.id}: needs at least one required poop spot ('S' or '$')`);
 
   const exitRects = groupCells(exitCells, width);
   if (exitRects.length > 1) throw new LevelParseError(`${def.meta.id}: more than one exit zone 'X' group`);

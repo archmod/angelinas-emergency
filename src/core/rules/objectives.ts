@@ -1,15 +1,22 @@
 import type { LevelRules } from '@/core/level/schema';
 
 export interface ObjectiveInput {
-  poopsCompleted: number;
+  /** Ids of every spot pooped in so far (each spot is single-use). */
+  usedSpots: ReadonlySet<string>;
+  /** Ids of the spots that must all be used before the exit opens (the level's objectives). */
+  requiredSpots: readonly string[];
   inExit: boolean;
   rules: LevelRules;
 }
 
 export interface ObjectiveStatus {
-  /** All required poops done. */
+  /** Number of required spots in the level. */
+  requiredTotal: number;
+  /** How many of the required spots have been used. */
+  requiredDone: number;
+  /** All required spots done. */
   poopsDone: boolean;
-  /** Exit is usable (poops done and the level has an exit). */
+  /** Exit is usable (required spots done and the level has an exit). */
   exitOpen: boolean;
   won: boolean;
   /** Short instruction for the HUD. */
@@ -17,13 +24,18 @@ export interface ObjectiveStatus {
 }
 
 export function evaluateObjectives(i: ObjectiveInput): ObjectiveStatus {
-  const remaining = Math.max(0, i.rules.requiredPoops - i.poopsCompleted);
+  const requiredTotal = i.requiredSpots.length;
+  const requiredDone = i.requiredSpots.filter((id) => i.usedSpots.has(id)).length;
+  const remaining = requiredTotal - requiredDone;
   const poopsDone = remaining === 0;
   const exitOpen = poopsDone && i.rules.exitRequired;
   const won = poopsDone && (!i.rules.exitRequired || i.inExit);
   let hint: string;
-  if (!poopsDone) hint = remaining === 1 ? 'Find a private spot and hold GO to let it out' : `${remaining} more to go — quietly!`;
-  else if (i.rules.exitRequired) hint = 'Slip away to the exit. Act natural!';
+  if (!poopsDone) {
+    if (requiredTotal === 1) hint = 'Sneak to the pinned spot and hold GO to let it out';
+    else if (remaining === 1) hint = 'One pinned spot left — hold GO there, quietly!';
+    else hint = `${remaining} pinned spots to go — one poop each, quietly!`;
+  } else if (i.rules.exitRequired) hint = 'Slip away to the exit. Act natural!';
   else hint = 'Phew. Nobody knows.';
-  return { poopsDone, exitOpen, won, hint };
+  return { requiredTotal, requiredDone, poopsDone, exitOpen, won, hint };
 }

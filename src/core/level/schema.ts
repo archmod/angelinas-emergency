@@ -41,16 +41,22 @@ export interface PoopSpotDef {
   /** hidden = safe from vision except up close; exposed = visible but faster. */
   cover: 'hidden' | 'exposed';
   durationMultiplier: number;
+  /**
+   * Every spot is single-use (one poop, then it's spent). Required spots are the level's objectives: all of
+   * them must be used before the exit opens. Optional spots are bonus relief valves that don't count.
+   */
+  required: boolean;
 }
 
 export interface LevelRules {
-  /** How many poops must be completed before the exit opens (or before winning if no exit). */
-  requiredPoops: number;
-  /** If false, the level is won as soon as requiredPoops are done. */
+  /** If false, the level is won as soon as every required spot has been used. */
   exitRequired: boolean;
 }
 
-export const DEFAULT_RULES: LevelRules = { requiredPoops: 1, exitRequired: true };
+export const DEFAULT_RULES: LevelRules = { exitRequired: true };
+
+/** The spots that must each be pooped in (once) to complete the level. */
+export const requiredSpots = (spots: readonly PoopSpotDef[]): PoopSpotDef[] => spots.filter((s) => s.required);
 
 /**
  * Engine-agnostic level description. Both the ASCII and Tiled loaders produce this; the Phaser

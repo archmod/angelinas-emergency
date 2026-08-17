@@ -13,7 +13,8 @@ const base = (): AsciiLevelDef => ({
     '#P..a...b#',
     '#.BB.=~T.#',
     '#S...XX..#',
-    '#$$.c...L#',
+    '#$$.c..?L#',
+    '#%.......#',
     '##########',
   ],
   enemies: [
@@ -26,7 +27,7 @@ describe('parseAsciiLevel', () => {
   it('produces grid dimensions, layers and flags', () => {
     const lvl = parseAsciiLevel(base(), 32);
     expect(lvl.width).toBe(10);
-    expect(lvl.height).toBe(6);
+    expect(lvl.height).toBe(7);
     const g = new Grid(lvl.width, lvl.height, 32, lvl.flags);
     expect(g.isSolid(0, 0)).toBe(true); // wall
     expect(g.isOccluding(0, 0)).toBe(true);
@@ -57,11 +58,22 @@ describe('parseAsciiLevel', () => {
     expect(lvl.exit).toEqual({ x: 5 * 32, y: 3 * 32, w: 2 * 32, h: 32 });
     const hidden = lvl.poopSpots.filter((s) => s.cover === 'hidden');
     const exposed = lvl.poopSpots.filter((s) => s.cover === 'exposed');
-    expect(hidden).toHaveLength(1);
-    expect(hidden[0]!.rect).toEqual({ x: 32, y: 3 * 32, w: 32, h: 32 });
-    expect(exposed).toHaveLength(1);
-    expect(exposed[0]!.rect).toEqual({ x: 32, y: 4 * 32, w: 64, h: 32 });
-    expect(lvl.rules.exitRequired).toBe(true);
+    expect(hidden).toHaveLength(2);
+    expect(hidden[0]).toMatchObject({ id: 'spot-hidden-0', rect: { x: 32, y: 3 * 32, w: 32, h: 32 }, required: true, durationMultiplier: 1 });
+    expect(hidden[1]).toMatchObject({ id: 'spot-hidden-1', rect: { x: 7 * 32, y: 4 * 32, w: 32, h: 32 }, required: false });
+    expect(exposed).toHaveLength(2);
+    expect(exposed[0]).toMatchObject({ id: 'spot-exposed-0', rect: { x: 32, y: 4 * 32, w: 64, h: 32 }, required: true, durationMultiplier: 0.7 });
+    expect(exposed[1]).toMatchObject({ id: 'spot-exposed-1', rect: { x: 32, y: 5 * 32, w: 32, h: 32 }, required: false });
+    expect(lvl.rules).toEqual({ exitRequired: true });
+    const g = new Grid(lvl.width, lvl.height, 32, lvl.flags);
+    expect(g.isHiding(7, 4)).toBe(true); // optional hidden spot hides too
+    expect(g.isHiding(1, 5)).toBe(false); // exposed spots don't
+  });
+
+  it('requires at least one required spot (S or $)', () => {
+    expect(() => parseAsciiLevel({ meta, map: ['P?%'] })).toThrow(/at least one required poop spot/);
+    expect(() => parseAsciiLevel({ meta, map: ['P..'] })).toThrow(/at least one required poop spot/);
+    expect(parseAsciiLevel({ meta, map: ['P$'] }).poopSpots).toHaveLength(1);
   });
 
   it('resolves enemy patrols and stationary posts from markers', () => {
@@ -89,7 +101,7 @@ describe('parseAsciiLevel', () => {
   });
 
   it('treats spaces as void (solid + opaque) and pads ragged rows', () => {
-    const lvl = parseAsciiLevel({ meta, map: ['P.', '.'] }, 32);
+    const lvl = parseAsciiLevel({ meta, map: ['PS', '.'] }, 32);
     const g = new Grid(lvl.width, lvl.height, 32, lvl.flags);
     expect(lvl.width).toBe(2);
     expect(g.isSolid(1, 1)).toBe(true);
@@ -99,11 +111,11 @@ describe('parseAsciiLevel', () => {
 
   it('rejects bad input', () => {
     expect(() => parseAsciiLevel({ meta, map: ['..'] })).toThrow(LevelParseError);
-    expect(() => parseAsciiLevel({ meta, map: ['P?'] })).toThrow(/unknown symbol/);
+    expect(() => parseAsciiLevel({ meta, map: ['P!'] })).toThrow(/unknown symbol/);
     expect(() => parseAsciiLevel({ meta, map: ['PP'] })).toThrow(/more than one player/);
     expect(() => parseAsciiLevel({ meta, map: ['Paa'] })).toThrow(/duplicate marker/);
-    expect(() => parseAsciiLevel({ meta, map: ['P.'], enemies: [{ kind: 'x', patrol: 'z' }] })).toThrow(/unknown marker/);
-    expect(() => parseAsciiLevel({ meta, map: ['P.'], enemies: [{ kind: 'x' }] })).toThrow(/needs 'patrol' or 'at'/);
-    expect(() => parseAsciiLevel({ meta, map: ['PX.X'] })).toThrow(/more than one exit/);
+    expect(() => parseAsciiLevel({ meta, map: ['PS'], enemies: [{ kind: 'x', patrol: 'z' }] })).toThrow(/unknown marker/);
+    expect(() => parseAsciiLevel({ meta, map: ['PS'], enemies: [{ kind: 'x' }] })).toThrow(/needs 'patrol' or 'at'/);
+    expect(() => parseAsciiLevel({ meta, map: ['PSX.X'] })).toThrow(/more than one exit/);
   });
 });

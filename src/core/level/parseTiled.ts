@@ -22,10 +22,11 @@ import {
  *   object layers: player  (one point object)
  *                  enemies (point objects; props: kind, patrol=<polyline name>, mode, facing, scanFrom, scanTo)
  *                  patrols (named polyline objects)
- *                  spots   (rects; class/type "hidden" | "exposed" or prop cover; prop duration)
+ *                  spots   (rects; class/type "hidden" | "exposed" or prop cover; props duration, required=true;
+ *                           single-use — every required spot must be used to open the exit, at least one needed)
  *                  hiding  (rects → HIDE, +OCCLUDE if prop occludes=true)
  *                  exit    (one rect)
- *   map props:     name, world, parSeconds, urgencySeconds, requiredPoops, exitRequired
+ *   map props:     name, world, parSeconds, urgencySeconds, exitRequired
  * Tile flags come from the placeholder tile kinds (index == TileKind) and can be overridden per tile
  * with boolean tile properties `collides`, `occludes`, `hides`.
  */
@@ -190,8 +191,15 @@ export function parseTiledMap(map: TiledMap, meta: LevelMeta): LevelData {
     const cover = String(p.cover ?? objClass(o) ?? 'hidden') === 'exposed' ? 'exposed' : 'hidden';
     const rect = rectOf(o);
     if (cover === 'hidden') rasterize(rect, TileFlag.HIDE);
-    return { id: o.name || `spot-${cover}-${i}`, rect, cover, durationMultiplier: Number(p.duration ?? (cover === 'hidden' ? 1 : 0.7)) };
+    return {
+      id: o.name || `spot-${cover}-${i}`,
+      rect,
+      cover,
+      durationMultiplier: Number(p.duration ?? (cover === 'hidden' ? 1 : 0.7)),
+      required: p.required === undefined ? true : Boolean(p.required),
+    };
   });
+  if (!poopSpots.some((s) => s.required)) throw new LevelParseError(`${id}: needs at least one required poop spot`);
 
   // Hiding rects
   for (const o of objLayer('hiding')) {
@@ -214,7 +222,6 @@ export function parseTiledMap(map: TiledMap, meta: LevelMeta): LevelData {
     urgencySeconds: mp.urgencySeconds !== undefined ? Number(mp.urgencySeconds) : meta.urgencySeconds,
   };
   const rules: LevelRules = { ...DEFAULT_RULES };
-  if (mp.requiredPoops !== undefined) rules.requiredPoops = Number(mp.requiredPoops);
   if (mp.exitRequired !== undefined) rules.exitRequired = Boolean(mp.exitRequired);
   if (rules.exitRequired && !exit) rules.exitRequired = false;
 

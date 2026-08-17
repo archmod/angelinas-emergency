@@ -3,6 +3,7 @@ import type { AsciiLevelDef } from '@/core/level/asciiLevel';
 /**
  * Neighborhood 1 — "Front Yards". Nosy neighbors sit on their porches and yell if they spot you
  * (they can't chase, but the mail carrier and the dog come running). Fences block feet, not eyes.
+ * One pinned spot (hidden, mid-map, past the mail route); the front-yard spots are optional relief.
  */
 export const NEIGHBORHOOD_01: AsciiLevelDef = {
   meta: { id: 'neighborhood-01', world: 'neighborhood', name: 'Front Yards', parSeconds: 100, urgencySeconds: 130 },
@@ -14,7 +15,7 @@ export const NEIGHBORHOOD_01: AsciiLevelDef = {
     '#,#....#..k...#....#..m...#....#.......,,X.#',
     '#,######......######......######.......,,,,#',
     '#,....BB......=====......==BB=..........,,,#',
-    '#,....BS..$...=.........$=...=..........,,,#',
+    '#,....B?..%...=.........%=...=..........,,,#',
     '#,............=====......=====..........,,,#',
     '#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#',
     '#,a....................................b,,,#',
@@ -42,5 +43,5 @@ export const NEIGHBORHOOD_01: AsciiLevelDef = {
     { kind: 'mailCarrier', patrol: 'ab', mode: 'pingpong' },
     { kind: 'dog', patrol: 'cd', mode: 'pingpong' },
   ],
-  rules: { requiredPoops: 1, exitRequired: true },
+  rules: { exitRequired: true },
 };

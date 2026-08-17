@@ -1,6 +1,6 @@
 import type { AsciiLevelDef } from '@/core/level/asciiLevel';
 
-/** Development playground: a small park with every tile type, one hidden and one exposed spot. */
+/** Development playground: a small park with every tile type, one required hidden spot and one optional exposed spot. */
 export const TEST_01: AsciiLevelDef = {
   meta: { id: 'test-01', world: 'park', name: 'Test Park', parSeconds: 60, urgencySeconds: 120 },
   map: [
@@ -20,7 +20,7 @@ export const TEST_01: AsciiLevelDef = {
     '#..~~~~....,,,,,,,,,,,,,,....#',
     '#..........,,,,,,,,,,,,,,....#',
     '#..........,,,,........,,....#',
-    '#.....$$...,,,,........,,....#',
+    '#.....%%...,,,,........,,....#',
     '#..........,,,,.....BB.,,..X.#',
     '#..........,,,,.....BB.,,..X.#',
     '##############################',

@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { BALANCE } from '@/config/balance';
 import { DEPTH, REGISTRY, SCENES } from '@/config/constants';
 import { TILE_SIZE } from '@/config/tiles';
-import type { Rect } from '@/core/level/schema';
+import type { PoopSpotDef } from '@/core/level/schema';
 import type { GasEvent } from '@/core/rules/gas';
 import { CHARACTER_SCALE, SPOT_TEXTURE_SIZE, TEX } from '@/game/art/AssetKeys';
 import type { AudioSystem } from '@/game/audio/AudioSystem';
@@ -51,6 +51,7 @@ export class GameScene extends Phaser.Scene {
   private exitSprite: Phaser.GameObjects.TileSprite | null = null;
   private audio!: AudioSystem;
   private exitWasOpen = false;
+  private usedSpotHintUntil = 0;
   private ended = false;
   private lastDryToot = -Infinity;
 
@@ -61,6 +62,7 @@ export class GameScene extends Phaser.Scene {
   create(data: GameSceneData): void {
     this.ended = false;
     this.exitWasOpen = false;
+    this.usedSpotHintUntil = 0;
     this.flags = this.registry.get(REGISTRY.DEBUG_FLAGS) as DebugFlags;
     this.audio = this.registry.get(REGISTRY.AUDIO) as AudioSystem;
     const levelId = data.levelId ?? this.flags.level ?? DEFAULT_LEVEL_ID;
@@ -84,7 +86,8 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.enemies, this.enemies);
 
     this.poop = new PoopSystem(this, levelData.poopSpots, this.noise);
-    this.poop.onCompleted = (p) => this.onPoopCompleted(p);
+    this.poop.onCompleted = (p, spot) => this.onPoopCompleted(p, spot);
+    this.poop.onUsedSpotPressed = () => this.onUsedSpotPressed();
     this.fart = new FartSystem(this, this.noise);
     this.fart.onSniff = (enemy) => {
       this.audio.play('sniff', 0.3);
@@ -97,8 +100,9 @@ export class GameScene extends Phaser.Scene {
 
     this.inputManager = new InputManager();
     this.inputManager.addSource(new KeyboardSource(this));
-    const req = levelData.rules.requiredPoops;
-    const intro = `Find a spot and poop ${req === 1 ? 'once' : `${req} times`} without anyone noticing${levelData.rules.exitRequired ? ', then slip away to the exit' : ''}. Joshau must never find out.`;
+    const req = this.run.requiredSpotIds.length;
+    const where = req === 1 ? 'Poop at the pinned spot' : `Poop at ${req === 2 ? 'both' : `all ${req}`} pinned spots (one go each)`;
+    const intro = `${where} without anyone noticing${levelData.rules.exitRequired ? ', then slip away to the exit' : ''}. Joshau must never find out.`;
     const tip = 'Gas builds up — toot early when nobody’s near (quiet), or it rips out on its own (LOUD).';
     this.scene.launch(SCENES.HUD, { input: this.inputManager, levelName: this.entry.name, bus: this.bus, run: this.run, intro, tip });
 
@@ -133,23 +137,28 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  /** Exit zone marker (poop spots draw themselves — see PoopSpot). Dim until the exit opens. */
   private drawZones(): void {
-    const { poopSpots, exit } = this.level.data;
-    // Marker textures are 2× (SPOT_TEXTURE_SIZE); tile them so exactly one marker fills each grid tile of the zone.
+    const exit = this.level.data.exit;
+    if (!exit) return;
+    // Marker texture is 2× (SPOT_TEXTURE_SIZE); tile it so exactly one marker fills each grid tile of the zone.
     const tileScale = TILE_SIZE / SPOT_TEXTURE_SIZE;
-    const rect = (r: Rect, key: string) =>
-      this.add.tileSprite(r.x + r.w / 2, r.y + r.h / 2, r.w, r.h, key).setTileScale(tileScale, tileScale).setDepth(DEPTH.SPOTS);
-    for (const s of poopSpots) rect(s.rect, s.cover === 'hidden' ? TEX.SPOT_HIDDEN : TEX.SPOT_EXPOSED);
-    if (exit) this.exitSprite = rect(exit, TEX.EXIT).setAlpha(0.35);
+    this.exitSprite = this.add
+      .tileSprite(exit.x + exit.w / 2, exit.y + exit.h / 2, exit.w, exit.h, TEX.EXIT)
+      .setTileScale(tileScale, tileScale)
+      .setDepth(DEPTH.SPOTS)
+      .setAlpha(0.35);
   }
 
-  private onPoopCompleted(poop: Poop): void {
-    this.run.onPoopCompleted();
+  private onPoopCompleted(poop: Poop, spot: PoopSpotDef): void {
+    this.run.onPoopCompleted(spot);
     this.fart.vent();
-    this.bus.emit('poop:completed', { total: this.run.poopsCompleted });
+    this.bus.emit('poop:completed', { total: this.run.poopsCompleted, spotId: spot.id, required: spot.required });
     this.cameras.main.flash(200, 126, 231, 135, false);
     this.audio.play('poopDone');
-    this.floatText(this.player.x, this.player.y - 36, 'Ahh… relief!', '#7ee787');
+    const { requiredDone, requiredTotal } = this.run.objectives;
+    const label = !spot.required ? 'Ahh… bonus relief!' : requiredTotal > 1 && requiredDone < requiredTotal ? `Ahh… ${requiredTotal - requiredDone} to go!` : 'Ahh… relief!';
+    this.floatText(this.player.x, this.player.y - 36, label, '#7ee787');
     this.physics.add.overlap(this.enemies, poop, (obj) => {
       const enemy = obj as Enemy;
       if (!enemy.stunned) {
@@ -159,6 +168,13 @@ export class GameScene extends Phaser.Scene {
         this.noise.emit({ pos: enemy.pos, radius: 60, loudness: 0.4, kind: 'bump', sourceId: enemy.id });
       }
     });
+  }
+
+  /** GO pressed on a spot she already used: one poop per spot — going twice would give her away. */
+  private onUsedSpotPressed(): void {
+    if (this.time.now < this.usedSpotHintUntil) return;
+    this.usedSpotHintUntil = this.time.now + 1500;
+    this.floatText(this.player.x, this.player.y - 36, 'Not here again — too obvious!', THEME.colors.warn);
   }
 
   /** Sound, text and a wobble for each gas event (see core/rules/gas.ts). */

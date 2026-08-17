@@ -1,9 +1,9 @@
 import type Phaser from 'phaser';
 import { ENEMY_DEFS } from '@/config/enemies';
 import { TILE_KIND_COUNT, TILE_SIZE } from '@/config/tiles';
-import { MENU_ART, SPOT_TEXTURE_SIZE, TEX, enemyTexture, walkAnim } from './AssetKeys';
+import { MENU_ART, SPOT_DONE_SIZE, SPOT_PIN_H, SPOT_PIN_W, SPOT_TEXTURE_SIZE, TEX, enemyTexture, walkAnim } from './AssetKeys';
 import { circle, rng, type Ctx } from './canvas';
-import { drawAngelina, drawCamera, drawDog, drawFootprint, drawFrogFoot, drawJoshau, drawPerson, drawPoop, drawPuff, drawSpot, drawStink, FRAME, WALK_FRAMES, type PersonLook } from './sprites';
+import { drawAngelina, drawCamera, drawDog, drawFootprint, drawFrogFoot, drawJoshau, drawPerson, drawPoop, drawPuff, drawSpot, drawSpotDone, drawSpotPin, drawStink, FRAME, WALK_FRAMES, type PersonLook } from './sprites';
 import { getMaterialCanvases } from './ground';
 import { drawTileset } from './tiles';
 
@@ -51,6 +51,8 @@ export function generateArtTextures(scene: Phaser.Scene): void {
   canvasTexture(scene, TEX.SPOT_HIDDEN, S, S, (ctx) => drawSpot(ctx, 0, 0, 'hidden'));
   canvasTexture(scene, TEX.SPOT_EXPOSED, S, S, (ctx) => drawSpot(ctx, 0, 0, 'exposed'));
   canvasTexture(scene, TEX.EXIT, S, S, (ctx) => drawSpot(ctx, 0, 0, 'exit'));
+  canvasTexture(scene, TEX.SPOT_PIN, SPOT_PIN_W, SPOT_PIN_H, (ctx) => drawSpotPin(ctx, 0, 0, SPOT_PIN_W, SPOT_PIN_H));
+  canvasTexture(scene, TEX.SPOT_DONE, SPOT_DONE_SIZE, SPOT_DONE_SIZE, (ctx) => drawSpotDone(ctx, 0, 0, SPOT_DONE_SIZE));
 
   // UI: joystick + buttons
   canvasTexture(scene, TEX.JOYSTICK_BASE, 160, 160, (ctx) => {

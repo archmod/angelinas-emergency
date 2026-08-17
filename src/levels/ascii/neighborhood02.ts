@@ -1,8 +1,9 @@
 import type { AsciiLevelDef } from '@/core/level/asciiLevel';
 
 /**
- * Neighborhood 2 — "Trash Day". Two poops. Two mail carriers on crossing routes, two dogs in
- * back yards, neighbors everywhere. Use the hedges.
+ * Neighborhood 2 — "Trash Day". Two pinned spots (both behind hedges), one poop each; the exposed yard
+ * spots are optional relief. Two mail carriers on crossing routes, two dogs in back yards, neighbors
+ * everywhere. Use the hedges.
  */
 export const NEIGHBORHOOD_02: AsciiLevelDef = {
   meta: { id: 'neighborhood-02', world: 'neighborhood', name: 'Trash Day', parSeconds: 150, urgencySeconds: 170 },
@@ -13,8 +14,8 @@ export const NEIGHBORHOOD_02: AsciiLevelDef = {
     '#.,....#....#...k...#....#...m...#....#.......,#',
     '#.,....######.......######.......######.......,#',
     '#.,..BB.......==.......=========......==......,#',
-    '#.,..BS.......=..$$....=..BB...=......=.......,#',
-    '#.,...........=........=..BS...=......=..$....,#',
+    '#.,..BS.......=..%%....=..BB...=......=.......,#',
+    '#.,...........=........=..BS...=......=..%....,#',
     '#.,...........==.......====.====......==......,#',
     '#.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#',
     '#.,a.................b.....................,,,,#',
@@ -44,5 +45,5 @@ export const NEIGHBORHOOD_02: AsciiLevelDef = {
     { kind: 'dog', patrol: 'cd', mode: 'pingpong' },
     { kind: 'dog', patrol: 'ef', mode: 'pingpong' },
   ],
-  rules: { requiredPoops: 2, exitRequired: true },
+  rules: { exitRequired: true },
 };

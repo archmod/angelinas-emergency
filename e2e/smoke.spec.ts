@@ -248,7 +248,7 @@ test('an enemy that sees Angelina chases and catches her → lose screen → ret
   expect(errors.filter((e) => !e.includes('GPU stall')), errors.join('\n')).toEqual([]);
 });
 
-test('hold GO on a spot to poop, then reach the exit to win', async ({ page, isMobile }) => {
+test('hold GO on each pinned spot to poop (once per spot), then reach the exit to win', async ({ page, isMobile }) => {
   test.skip(isMobile, 'uses keyboard');
   const errors = collectErrors(page);
   await page.goto('/?debug=1&god=1&level=test-01'); // god: enemies can't catch her, keeps the test deterministic
@@ -257,23 +257,44 @@ test('hold GO on a spot to poop, then reach the exit to win', async ({ page, isM
   await waitForScene(page, 'Game');
   await page.waitForTimeout(200);
 
+  type Spot = { id: string; required: boolean; rect: { x: number; y: number; w: number; h: number } };
   type G = {
     player: { setPosition(x: number, y: number): void };
-    run: { poopsCompleted: number; objectives: { exitOpen: boolean; won: boolean } };
-    level: { data: { poopSpots: { rect: { x: number; y: number; w: number; h: number } }[]; exit: { x: number; y: number; w: number; h: number } } };
+    run: { poopsCompleted: number; usedSpots: Set<string>; objectives: { exitOpen: boolean; won: boolean; requiredDone: number; requiredTotal: number } };
+    level: { data: { poopSpots: Spot[]; exit: { x: number; y: number; w: number; h: number } } };
   };
   const gameScene = (): G => (window as unknown as { __game: { scene: { getScene(k: string): G } } }).__game.scene.getScene('Game');
-
-  // Teleport onto the first (hidden) spot and hold Space.
-  await page.evaluate((fnSrc) => {
+  const teleportToSpot = (i: number) =>
+    page.evaluate(
+      ({ fnSrc, i }) => {
+        const g = (new Function(`return (${fnSrc})()`) as () => G)();
+        const r = g.level.data.poopSpots.filter((s) => s.required)[i]!.rect;
+        g.player.setPosition(r.x + r.w / 2, r.y + r.h / 2);
+      },
+      { fnSrc: gameScene.toString(), i },
+    );
+  const state = () => page.evaluate((fnSrc) => {
     const g = (new Function(`return (${fnSrc})()`) as () => G)();
-    const r = g.level.data.poopSpots[0]!.rect;
-    g.player.setPosition(r.x + r.w / 2, r.y + r.h / 2);
+    return { poops: g.run.poopsCompleted, exitOpen: g.run.objectives.exitOpen, done: g.run.objectives.requiredDone, total: g.run.objectives.requiredTotal };
   }, gameScene.toString());
+
+  // Poop on every required (pinned) spot in turn: teleport onto it and hold Space.
+  const total = (await state()).total;
+  expect(total).toBeGreaterThan(0);
+  for (let i = 0; i < total; i++) {
+    await teleportToSpot(i);
+    await page.keyboard.down('Space');
+    await page.waitForFunction(({ fnSrc, n }) => (new Function(`return (${fnSrc})()`) as () => G)().run.poopsCompleted >= n, { fnSrc: gameScene.toString(), n: i + 1 }, { timeout: 8000 });
+    await page.keyboard.up('Space');
+  }
+  expect(await state()).toMatchObject({ poops: total, done: total, exitOpen: true });
+
+  // A used spot is spent: holding GO on it again (longer than a poop takes) does nothing — no extra poop.
+  await teleportToSpot(0);
   await page.keyboard.down('Space');
-  await page.waitForFunction((fnSrc) => (new Function(`return (${fnSrc})()`) as () => G)().run.poopsCompleted >= 1, gameScene.toString(), { timeout: 8000 });
+  await page.waitForTimeout(4000);
   await page.keyboard.up('Space');
-  expect(await page.evaluate((fnSrc) => (new Function(`return (${fnSrc})()`) as () => G)().run.objectives.exitOpen, gameScene.toString())).toBe(true);
+  expect((await state()).poops).toBe(total);
 
   // Walk into the exit → win → Result scene.
   await page.evaluate((fnSrc) => {

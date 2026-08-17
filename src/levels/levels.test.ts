@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getEnemyDef } from '@/config/enemies';
 import { findPathWorld } from '@/core/grid/astar';
 import { Grid } from '@/core/grid/Grid';
-import type { Rect } from '@/core/level/schema';
+import { requiredSpots, type Rect } from '@/core/level/schema';
 import { NEIGHBORHOOD_01 } from './ascii/neighborhood01';
 import { NEIGHBORHOOD_02 } from './ascii/neighborhood02';
 import { PARK_01 } from './ascii/park01';
@@ -26,9 +26,10 @@ describe.each(LEVELS.map((l) => [l.id, l] as const))('level %s', (_id, entry) =>
   const data = entry.load();
   const grid = new Grid(data.width, data.height, data.tileSize, data.flags);
 
-  it('has a walkable spawn, at least one poop spot and (if required) an exit', () => {
+  it('has a walkable spawn, at least one required poop spot, unique spot ids and (if required) an exit', () => {
     expect(grid.isWalkable(...Object.values(grid.worldToTile(data.playerSpawn)) as [number, number])).toBe(true);
-    expect(data.poopSpots.length).toBeGreaterThan(0);
+    expect(requiredSpots(data.poopSpots).length).toBeGreaterThan(0);
+    expect(new Set(data.poopSpots.map((s) => s.id)).size).toBe(data.poopSpots.length);
     if (data.rules.exitRequired) expect(data.exit).not.toBeNull();
   });
 

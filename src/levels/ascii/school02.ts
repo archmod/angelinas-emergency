@@ -1,8 +1,9 @@
 import type { AsciiLevelDef } from '@/core/level/asciiLevel';
 
 /**
- * School 2 — "Detention". Two poops. Two hall monitors, cameras at both ends, teachers on the
- * move between classrooms. Locker rows are your friends.
+ * School 2 — "Detention". Two pinned classroom spots, one poop each (the exposed classroom is optional
+ * relief). Two hall monitors, cameras at both ends, teachers on the move between classrooms. Locker rows
+ * are your friends.
  */
 export const SCHOOL_02: AsciiLevelDef = {
   meta: { id: 'school-02', world: 'school', name: 'Detention', parSeconds: 160, urgencySeconds: 180 },
@@ -13,7 +14,7 @@ export const SCHOOL_02: AsciiLevelDef = {
     '#LL_________________________________________LL__#',
     '#_____########____########____########__________#',
     '#_____#______#____#______#____#______#__________#',
-    '#_____#__S___#____#__k___#____#__$___#__________#',
+    '#_____#__S___#____#__k___#____#__%___#__________#',
     '#_____#______#____#______#____#______#__________#',
     '#_____####_###____###_####____###_####__________#',
     '#_______________________________________________#',
@@ -40,5 +41,5 @@ export const SCHOOL_02: AsciiLevelDef = {
     { kind: 'janitor', at: 'd', scanDeg: [-60, 60] },
     { kind: 'camera', at: 'c', scanDeg: [120, 240] },
   ],
-  rules: { requiredPoops: 2, exitRequired: true },
+  rules: { exitRequired: true },
 };

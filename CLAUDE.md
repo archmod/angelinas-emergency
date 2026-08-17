@@ -34,6 +34,10 @@ Full design/milestone plan: `~/.claude/plans/wise-dancing-walrus.md` (M0 scaffol
   object tiles (fence/bush/tree/locker) have transparent backgrounds so the painted ground shows through.
 - Levels: internal `LevelData` schema; authored as ASCII (`src/levels/ascii/*.ts`, registered in `src/levels/registry.ts`,
   validated by `src/levels/levels.test.ts`); Tiled `.tmj` loader in `src/core/level/parseTiled.ts` (register with `tiled(meta, url)`).
+- Poop spots are single-use and the objective is per spot: `PoopSpotDef.required` spots (ASCII `S`/`$`, Tiled prop `required`, default
+  true) must each be pooped in once to open the exit (`core/rules/objectives.ts` takes the used/required spot ids; `RunState.usedSpots`);
+  optional spots (ASCII `?`/`%`) only relieve urgency. `PoopSystem.spotAt()` ignores used spots; visuals (bobbing pin on required
+  spots → check badge when spent) live in `src/game/entities/PoopSpot.ts`. There is no "N poops" count any more.
 - Enemy archetypes are data in `src/config/enemies.ts`; the pure FSM is `src/core/ai/enemyBrain.ts` (commands applied by `src/game/entities/Enemy.ts`).
 - Audio is procedural (`src/game/audio/AudioSystem.ts`, WebAudio patches) — no sound files. UI sounds via `Button`.
 - Progress/settings persist through `src/game/systems/SaveManager.ts` (`src/core/rules/progress.ts` schema).

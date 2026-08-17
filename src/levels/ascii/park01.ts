@@ -1,8 +1,9 @@
 import type { AsciiLevelDef } from '@/core/level/asciiLevel';
 
 /**
- * Park 1 — "Morning Jog". Teaches: sneak past a patrol, poop in a hidden spot behind bushes while
- * the ranger is far away (he can hear you!), then reach the exit at the top right.
+ * Park 1 — "Morning Jog". Teaches: sneak past a patrol, poop in the pinned hidden spot behind the bushes
+ * while the ranger is far away (he can hear you!), then reach the exit at the top right. The exposed spot by
+ * the pond is optional relief if the urgency meter gets scary.
  */
 export const PARK_01: AsciiLevelDef = {
   meta: { id: 'park-01', world: 'park', name: 'Morning Jog', parSeconds: 75, urgencySeconds: 110 },
@@ -24,7 +25,7 @@ export const PARK_01: AsciiLevelDef = {
     '#.......===========,,,,,,,,======......#',
     '#..................,,,,,,,,............#',
     '#....~~~~..........,,,,........h.......#',
-    '#....~~~~....$.....,,,,........TT......#',
+    '#....~~~~....%.....,,,,........TT......#',
     '#....~~~~..........,,,,........TT......#',
     '#..................,,,,................#',
     '#.....e............,,,,........f.......#',
@@ -36,5 +37,5 @@ export const PARK_01: AsciiLevelDef = {
     { kind: 'ranger', patrol: 'acd', mode: 'pingpong' },
     { kind: 'jogger', patrol: 'efh', mode: 'loop' },
   ],
-  rules: { requiredPoops: 1, exitRequired: true },
+  rules: { exitRequired: true },
 };

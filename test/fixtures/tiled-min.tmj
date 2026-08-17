@@ -3,7 +3,6 @@
   "width": 6, "height": 5, "tilewidth": 32, "tileheight": 32,
   "properties": [
     { "name": "name", "type": "string", "value": "Fixture Park" },
-    { "name": "requiredPoops", "type": "int", "value": 2 },
     { "name": "parSeconds", "type": "int", "value": 45 }
   ],
   "tilesets": [
@@ -24,7 +23,7 @@
     ] },
     { "type": "objectgroup", "name": "spots", "objects": [
       { "id": 5, "x": 32, "y": 96, "width": 32, "height": 32, "class": "hidden" },
-      { "id": 6, "x": 96, "y": 96, "width": 32, "height": 32, "class": "exposed", "properties": [ { "name": "duration", "type": "float", "value": 0.5 } ] }
+      { "id": 6, "x": 96, "y": 96, "width": 32, "height": 32, "class": "exposed", "properties": [ { "name": "duration", "type": "float", "value": 0.5 }, { "name": "required", "type": "bool", "value": false } ] }
     ] },
     { "type": "objectgroup", "name": "exit", "objects": [ { "id": 7, "x": 128, "y": 32, "width": 32, "height": 32 } ] }
   ]

@@ -67,17 +67,29 @@ describe('urgency', () => {
 });
 
 describe('objectives', () => {
-  it('requires poops then the exit when the level has one', () => {
-    const rules = { requiredPoops: 2, exitRequired: true };
-    expect(evaluateObjectives({ poopsCompleted: 0, inExit: true, rules }).won).toBe(false);
-    expect(evaluateObjectives({ poopsCompleted: 1, inExit: false, rules }).hint).toMatch(/hold GO/);
-    const done = evaluateObjectives({ poopsCompleted: 2, inExit: false, rules });
+  const rules = { exitRequired: true };
+  const requiredSpots = ['a', 'b'];
+  const used = (...ids: string[]) => new Set(ids);
+
+  it('requires every required spot, then the exit when the level has one', () => {
+    expect(evaluateObjectives({ usedSpots: used(), requiredSpots, inExit: true, rules }).won).toBe(false);
+    const half = evaluateObjectives({ usedSpots: used('a'), requiredSpots, inExit: false, rules });
+    expect(half.requiredDone).toBe(1);
+    expect(half.requiredTotal).toBe(2);
+    expect(half.hint).toMatch(/hold GO/);
+    const done = evaluateObjectives({ usedSpots: used('a', 'b'), requiredSpots, inExit: false, rules });
     expect(done.exitOpen).toBe(true);
     expect(done.won).toBe(false);
-    expect(evaluateObjectives({ poopsCompleted: 2, inExit: true, rules }).won).toBe(true);
+    expect(evaluateObjectives({ usedSpots: used('a', 'b'), requiredSpots, inExit: true, rules }).won).toBe(true);
+  });
+  it('optional spots do not count towards the objective', () => {
+    const s = evaluateObjectives({ usedSpots: used('a', 'bonus-1', 'bonus-2'), requiredSpots, inExit: true, rules });
+    expect(s.requiredDone).toBe(1);
+    expect(s.exitOpen).toBe(false);
+    expect(s.won).toBe(false);
   });
   it('wins immediately without an exit', () => {
-    expect(evaluateObjectives({ poopsCompleted: 1, inExit: false, rules: { requiredPoops: 1, exitRequired: false } }).won).toBe(true);
+    expect(evaluateObjectives({ usedSpots: used('a'), requiredSpots: ['a'], inExit: false, rules: { exitRequired: false } }).won).toBe(true);
   });
 });
 

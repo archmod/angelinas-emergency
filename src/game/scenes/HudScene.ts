@@ -149,8 +149,8 @@ export class HudScene extends Phaser.Scene {
     this.drawGasMeter(time, deltaMs);
 
     this.hintText.setText(this.run.objectives.hint);
-    const req = this.run.level.rules.requiredPoops;
-    this.countText.setText(`Poops ${this.run.poopsCompleted}/${req}${this.run.objectives.exitOpen ? '  ·  EXIT OPEN' : ''}`);
+    const { requiredDone, requiredTotal, exitOpen } = this.run.objectives;
+    this.countText.setText(`Spots ${requiredDone}/${requiredTotal}${exitOpen ? '  ·  EXIT OPEN' : ''}`);
   }
 
   /** Gas meter: sickly green fill, a tick where a deliberate toot becomes possible, pulsing yellow when it's about to blow. */

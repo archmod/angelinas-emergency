@@ -362,6 +362,54 @@ export function drawSpot(ctx: Ctx, ox: number, oy: number, kind: 'hidden' | 'exp
 }
 
 /**
+ * Objective pin (SPOT_PIN_W×SPOT_PIN_H, tip at the bottom centre): a map-pin teardrop in Angelina pink with a
+ * poop silhouette in the head. Bobs above every required (must-go) spot until it's used.
+ */
+export function drawSpotPin(ctx: Ctx, ox: number, oy: number, w: number, h: number): void {
+  const cx = ox + w / 2;
+  const r = w * 0.42;
+  const cy = oy + r + 3;
+  const fill = '#ff7ab6';
+  const outline = '#3f2412';
+  ctx.save();
+  // teardrop: circle head + triangle to the tip
+  ctx.beginPath();
+  ctx.moveTo(cx, oy + h - 2);
+  ctx.lineTo(cx - r * 0.72, cy + r * 0.62);
+  ctx.arc(cx, cy, r, Math.PI * 0.75, Math.PI * 2.25, false);
+  ctx.closePath();
+  ctx.fillStyle = shade(ctx, cx - r * 0.3, cy - r * 0.3, r * 1.4, '#ffa9d1', fill);
+  ctx.fill();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = outline;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+  // white disc with the poop mark
+  circle(ctx, cx, cy, r * 0.66, '#fff1d6');
+  drawPoop(ctx, cx - r * 0.5, cy - r * 0.55, { face: false, size: r });
+  ctx.restore();
+}
+
+/** "Done" badge (SPOT_DONE_SIZE square): frog-green disc with a cream check mark; replaces a spot's pin once it's spent. */
+export function drawSpotDone(ctx: Ctx, ox: number, oy: number, size: number): void {
+  const cx = ox + size / 2;
+  const cy = oy + size / 2;
+  const r = size / 2 - 3;
+  circle(ctx, cx, cy, r, shade(ctx, cx - r * 0.3, cy - r * 0.3, r * 1.4, '#a8ef85', '#5aa83a'), { stroke: '#3f2412', lineWidth: 3 });
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#fff1d6';
+  ctx.lineWidth = Math.max(3, size * 0.14);
+  ctx.beginPath();
+  ctx.moveTo(cx - r * 0.5, cy + r * 0.02);
+  ctx.lineTo(cx - r * 0.12, cy + r * 0.42);
+  ctx.lineTo(cx + r * 0.55, cy - r * 0.42);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/**
  * Frog footprint silhouette (heel pad + three toes) pointing up (-y), single flat colour, in a w×h box.
  * Used for the tiptoe trail on the menu and the faint background pattern; mirror with flipX for the other foot.
  */
